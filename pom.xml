@@ -16,16 +16,30 @@
 		<ehcache.version>2.5.0</ehcache.version>
 		<guice.version>4.0-beta5</guice.version>
 		<jackson.version>2.5.0</jackson.version>
-		<jsieve.version>0.5-SNAPSHOT</jsieve.version>
+		<jsieve.version>0.5-PATCHED</jsieve.version>
 		<logback.version>1.1.2</logback.version>
 		<lucene.version>4.10.3</lucene.version>
 		<mime4j.version>0.7.2</mime4j.version>
 		<slf4j.version>1.7.10</slf4j.version>
-		<subethamail.version>3.1.7-SNAPSHOT</subethamail.version>
+		<subethamail.version>3.1.7-PATCHED</subethamail.version>
 	</properties>
 	<prerequisites>
 		<maven>3.0</maven>
 	</prerequisites>
+	<repositories>
+		<repository>
+			<id>bundled</id>
+			<name>Patched libs or otherwise not publicly available JARs.</name>
+			<releases>
+				<enabled>true</enabled>
+				<checksumPolicy>ignore</checksumPolicy>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+			<url>file://${project.basedir}/repo</url>
+		</repository>
+	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>org.apache.james</groupId>
