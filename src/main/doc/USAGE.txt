@@ -1,0 +1,150 @@
+MCF
+================================
+
+Mail-Content-Filter radi kao SMTP proxy i primjenjuje sieve
+pravila. Poruke se mogu proslijediti na slijedeci SMTP server,
+spremiti u mbox ili maildir ili jednostavno odbaciti.
+
+Za test, mcf mozete pokrenuti na slijedeci nacin:
+
+	java -jar mcf-0.5.jar
+
+U direktoriju iz kojeg se pokrece server ce potraziti
+mcf.properties konfiguracijski fajl. Ako ga ne nade, na
+ekranu ce se pojaviti ruzan stack trace.
+
+Svi java library-ji koje mcf treba su spakirani u mcf-X.Y.jar
+kako bi pokretanje bilo jednostavnije.
+
+
+Konfiguracija
+================================
+
+MCF se konfigurira putem skupa properties-a koji se mogu navesti
+na komandnoj liniji ili se mogu spremiti u konfiguracijski fajl.
+
+Svaki property ima defaultnu vrijednost, koju mozete pogledati,
+zajedno sa opisom istog u mcf-default.properties
+
+Primjer konfiguracijskog fajla (mcf.properties):
+--------------------------------
+# SMTP server listening port
+listen = 127.0.0.1:8025
+
+# Default 'keep' route
+keep = smtp:127.0.0.1:8028
+
+# Path to sieve file
+sieve = samples/sieve/sieve-2.siv
+--------------------------------
+
+Ukoliko se property predaje sa komandne linije treba prije
+naziva dodati -Dmcf. Npr:
+
+	-Dmcf.listen=127.0.0.1:8025 -Dmcf.keep=smtp:127.0.0.1:8028
+
+Ime konfiguracijskog fajla predaje se sa:
+
+	-Dmcf.configFile=/path/to/mcf.properties
+
+
+Sieve
+================================
+
+Implemetirana su sieve pravila prema RFC-u. U trenutku inspiracije
+zakljucio sam da vama u biti treba full-text search a ne regexp-i
+po body-ju poruke. Za matchiranje body content-a se rabi lucene.
+
+Query sintaksa je opisana na:
+
+	http://lucene.apache.org/java/3_5_0/queryparsersyntax.html
+
+Ako zelite matchirati poruke u kojima se spominje viagra u
+sieve upisite:
+
+	body :contains "viagr*"
+
+Indeksirani su svi body dijelovi, a i headeri. Recimo za
+pronaci viagru u subjectu ali samo ako se ne spominje iskon
+
+	body :contains "+subject:viagra -subject:iskon"
+
+(Ako vase use-case-ove lucene ne moze rijesiti nego bas trebate
+regexp-e ne sumljam da cete javiti. Lucene ima nekih bitnih
+prednosti u odnosu na regexp, recimo moze podrzati jako veliku
+poruke bez opasnosti da ce upit trajati beskonacno :)
+
+
+Routanje poruka
+================================
+
+Poruke se route-aju pomocu custom akcije route ili standardne
+fileinto akcije. Trenutno su oba naziva sinonimi. U parametru
+akcije navodi se sto se treba dogoditi sa porukom, Npr:
+
+fileinto "mbox:/tmp/poruke"
+route "smtp:neki-server:25"
+
+Format je [protokol]:[destinacija]
+
+Podrzani protokoli su:
+
+mbox:/path/to/mbox        = sprema poruku u mbox
+maildir:/path/to/maildir  = spremi poruku u maildir
+smtp:server:port          = forwardira poruku putem SMTP protokola
+discard:neka-poruka       = discard-a poruku
+
+
+Logiranje
+================================
+
+Logiranje se vrsi sa logback sustavom. To je super-duper sin od log4j.
+Dokumentacija za isti se moze naci na:
+
+	http://logback.qos.ch/manual/configuration.html
+
+Ako se nista ne specificira, log ide na stdout. Konfiguracijski fajl se
+moze specificirati na komandnoj liniji sa:
+
+	-Dlogback.configurationFile=/path/to/config.xml
+
+
+Change log
+================================
+
+Verzija 0.6
+
+- Dodan redelivery poruka (store-and-forward). Poruke koje se ne uspiju
+  proslijediti na sve route u prvom pokusaju, spremaju se u queue direktorij.
+  Svakih N sekundi se ponovno pokusava delivery poruke. Ako je N <= 0, onda
+  redelivery ne radi.
+
+  Format queue dira je <id>.json (metapodaci) + <id> (fajl sa porukom)
+
+- Integracija sa clamav-om i spamassassinom (nije ukljuceno kod vas)
+
+- \r\n -> \n kod mbox-a i maildira
+
+- Format From_ linije je "From A Fri Apr 27 10:12:55 2012 id=3eBw5EMd"
+  U DjB moreinfo polju sprema se id poruke. Moze se iskljuciti kroz conf.
+  Datum po asctime formatu.
+
+- Auto kreiranje maildir-a ako ne postoji
+
+- U 'keep' konfiguracijski parametar moze se staviti vise mailboxova ili
+  servera. Npr: 'keep = mbox:/mnt/mail/keep smtp:postar:25'
+
+  Delivery ide na sve njih.
+
+- Promjenjen format Received headera:
+
+	Received: from tiktok (tiktok.nmote.com [127.0.0.1])
+        by tiktok (MCF 1.0) with SMTP
+        for B111@foobar.com;
+        Fri, 27 Apr 2012 10:12:55 +0200 (CEST)
+
+- Bolji error reporting i logging, te razne druge izmjene i bugfiksevi
+
+
+
+
