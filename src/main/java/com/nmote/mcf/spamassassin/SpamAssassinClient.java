@@ -17,6 +17,14 @@ import org.slf4j.LoggerFactory;
 @Singleton
 public class SpamAssassinClient {
 
+	private static final String ENCODING = "us-ascii";
+
+	public static void main(String[] args) throws IOException {
+		SpamAssassinClient c = new SpamAssassinClient();
+		File test = new File("samples/spamassassin-test.txt");
+		System.err.println(c.check(new FileInputStream(test), test.length()));
+	}
+
 	/**
 	 * Tests input stream for spam.
 	 *
@@ -47,13 +55,13 @@ public class SpamAssassinClient {
 					out.write(buffer, 0, len);
 					total += len;
 				}
-
 			}
 			// out.write("\r\n".getBytes(ENCODING));
 			out.flush();
 			log.debug("<< Checking {} bytes", total);
 			SpamAssassinResult sar = new SpamAssassinResult();
 			for (String line : IOUtils.readLines(in)) {
+				// log.debug(">> {}", line);
 				if (line.startsWith("Spam: ")) {
 					String[] a = StringUtils.split(line, ":;/");
 					sar.setSpam(Boolean.parseBoolean(StringUtils.trim(a[1])));
@@ -66,7 +74,7 @@ public class SpamAssassinClient {
 					}
 				}
 			}
-			log.debug("Spam {} ({} / {})", new Object[] { sar.isSpam(), sar.getScore(), sar.getThreshold() });
+			log.debug("{} ({} / {})", sar.isSpam()? "Spam" : "Ok", sar.getScore(), sar.getThreshold());
 			return sar;
 		} finally {
 			IOUtils.closeQuietly(in);
@@ -95,6 +103,13 @@ public class SpamAssassinClient {
 		return user;
 	}
 
+	public void setBufferSize(int bufferSize) {
+		if (bufferSize < 128) {
+			bufferSize = 128;
+		}
+		this.bufferSize = bufferSize;
+	}
+
 	public void setHost(String host) {
 		if (host == null) {
 			throw new NullPointerException("host == null");
@@ -117,28 +132,11 @@ public class SpamAssassinClient {
 		this.user = user;
 	}
 
-	private String protocol = "1.2";
-
-	private String user = "mcf";
-
-	private String host = "localhost";
-	private int port = 783;
-	private Logger log = LoggerFactory.getLogger(getClass());
 	private int bufferSize = 1400;
-
-	private static final String ENCODING = "us-ascii";
-
-	public static void main(String[] args) throws IOException {
-		SpamAssassinClient c = new SpamAssassinClient();
-		File test = new File("samples/spamassassin-test.txt");
-		System.err.println(c.check(new FileInputStream(test), test.length()));
-	}
-
-	public void setBufferSize(int bufferSize) {
-		if (bufferSize < 128) {
-			bufferSize = 128;
-		}
-		this.bufferSize = bufferSize;
-	}
+	private String host = "localhost";
+	private Logger log = LoggerFactory.getLogger(getClass());
+	private int port = 783;
+	private String protocol = "1.2";
+	private String user = "mcf";
 
 }
