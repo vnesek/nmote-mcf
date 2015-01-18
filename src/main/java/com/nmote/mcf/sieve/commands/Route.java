@@ -1,4 +1,4 @@
-package com.nmote.mcf.commands;
+package com.nmote.mcf.sieve.commands;
 
 import org.apache.jsieve.Arguments;
 import org.apache.jsieve.Block;

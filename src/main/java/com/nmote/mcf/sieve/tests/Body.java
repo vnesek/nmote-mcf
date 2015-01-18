@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package com.nmote.mcf.tests;
+package com.nmote.mcf.sieve.tests;
 
 import java.util.List;
 
