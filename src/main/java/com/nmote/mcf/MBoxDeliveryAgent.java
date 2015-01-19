@@ -88,7 +88,7 @@ public class MBoxDeliveryAgent implements DeliveryAgent {
 					counters.add("bytes.mbox" + key, written);
 					counters.add("count.mbox" + key, 1);
 
-					delivery.setStatus(mboxPath);
+					delivery.setStatus(mbox.getName());
 					delivery.setCompleted();
 					return;
 				}

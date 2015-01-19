@@ -75,7 +75,7 @@ public class MaildirDeliveryAgent implements DeliveryAgent {
 		OutputStream out = new CRLFOutputStream(new BufferedOutputStream(new FileOutputStream(tmpFile),
 				outputBufferSize));
 		long written = msg.writeTo(out, keepHeaderIntact);
-		log.info("Saved to tmp dir {}, written {} bytes", msg.getId(), written);
+		log.info("Saved to tmp {}, written {} bytes", msg.getId(), written);
 
 		counters.add("bytes.maildir" + key, written);
 		counters.add("count.maildir" + key, 1);
@@ -89,13 +89,13 @@ public class MaildirDeliveryAgent implements DeliveryAgent {
 		}
 
 		// Move from 'tmp' to 'new'
-		File newFile = new File(nu, tmpFile.getName());
+		File newFile = new File(nu, tmpFile.getName() + ",S=" + written);
 		if (!tmpFile.renameTo(newFile)) {
 			tmpFile.delete();
 			throw new IOException("can't move tmp file to new directory: " + tmpFile);
 		}
 
-		delivery.setStatus(newFile.getAbsolutePath());
+		delivery.setStatus(tmpFile.getName());
 		//delivery.setStatus("pass-reject-5302 buzz off!");
 		delivery.setCompleted();
 		log.info("Delivered {} to {}", msg.getId(), delivery.getStatus());
@@ -118,7 +118,7 @@ public class MaildirDeliveryAgent implements DeliveryAgent {
 	public void setOutputBufferSize(int outputBufferSize) {
 		this.outputBufferSize = outputBufferSize;
 	}
-	
+
 	@Inject
 	private Counters counters;
 
