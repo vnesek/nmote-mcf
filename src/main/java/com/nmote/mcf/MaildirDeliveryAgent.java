@@ -95,7 +95,7 @@ public class MaildirDeliveryAgent implements DeliveryAgent {
 			throw new IOException("can't move tmp file to new directory: " + tmpFile);
 		}
 
-		delivery.setStatus(tmpFile.getName());
+		delivery.setStatus("maildir=>" + tmpFile.getName());
 		//delivery.setStatus("pass-reject-5302 buzz off!");
 		delivery.setCompleted();
 		log.info("Delivered {} to {}", msg.getId(), delivery.getStatus());

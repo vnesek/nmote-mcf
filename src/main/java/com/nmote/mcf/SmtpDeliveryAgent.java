@@ -68,7 +68,7 @@ public class SmtpDeliveryAgent implements DeliveryAgent {
 
 				// Finish data command
 				Response dataEnd = smartClient.dataEnd();
-				delivery.setStatus("pass " + delivery.getDestination() + " (" + dataEnd.getMessage() + ')');
+				delivery.setStatus("pass=>" + delivery.getDestination() + " (" + dataEnd.getMessage() + ')');
 				delivery.setCompleted();
 				log.info("Forwarded {}, written {} bytes, ", new Object[] { msg.getId(), written, dataEnd });
 			} finally {
