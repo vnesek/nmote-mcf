@@ -1,4 +1,4 @@
-package com.nmote.mcf;
+package com.nmote.mcf.sieve;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,8 +6,10 @@ import org.slf4j.MDC;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.nmote.mcf.sieve.SieveMessageProcessor;
-import com.nmote.mcf.sieve.Module;
+import com.nmote.mcf.McfModule;
+import com.nmote.mcf.MessageProcessor;
+import com.nmote.mcf.Queue;
+import com.nmote.mcf.QueueMessage;
 
 public class Test {
 

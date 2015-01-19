@@ -25,7 +25,6 @@ import com.google.inject.name.Named;
 import com.nmote.counters.Counters;
 import com.nmote.mcf.DefaultMessageProcessor;
 import com.nmote.mcf.QueueMessage;
-import com.nmote.mcf.QueueMessageMailAdapter;
 
 /**
  * Routes messages according to sieve rules from a sieve configuration file.

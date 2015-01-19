@@ -1,4 +1,4 @@
-package com.nmote.mcf;
+package com.nmote.mcf.sieve;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,6 +20,8 @@ import org.apache.jsieve.mail.AddressImpl;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.mail.SieveMailException;
 import org.apache.jsieve.mail.optional.EnvelopeAccessors;
+
+import com.nmote.mcf.QueueMessage;
 
 public class QueueMessageMailAdapter implements MailAdapter, EnvelopeAccessors {
 
