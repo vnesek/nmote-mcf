@@ -10,9 +10,12 @@ import javax.inject.Named;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
+import com.nmote.counters.Counters;
 import com.nmote.maildir.Maildir;
 import com.nmote.mcf.DefaultMessageProcessor;
+import com.nmote.mcf.DotQmailMessageProcessor;
 import com.nmote.mcf.NonLocalUserException;
 import com.nmote.mcf.QueueMessage;
 import com.nmote.mcf.RejectException;
@@ -64,33 +67,50 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
 	@Override
 	public void route(QueueMessage message) throws IOException {
 		// Only local delivery to existing vpopmail accounts
-		for (String recipient : message.getRecipients()) {
-			// Resolve email address
-			String address = routing.resolveEmail(recipient, "optinet.hr");
-			String[] a = StringUtils.split(address, '@');
-			if (a.length != 2) {
-				log.error("Invalid recipient {} for {}", recipient, message);
-				throw new IOException("invalid address: " + recipient);
+		for (final String recipient : message.getRecipients()) {
+			final long start = System.currentTimeMillis();
+			MDC.put("to", recipient);
+			try {
+				// Resolve email address
+				final String address = routing.resolveEmail(recipient, "optinet.hr");
+				final String[] a = StringUtils.split(address, '@');
+				if (a.length != 2) {
+					log.error("Invalid recipient {} for {}", recipient, message);
+					throw new IOException("invalid address: " + recipient);
+				}
+
+				// Find a maildir
+				final Maildir maildir = maildirSource.get(a[0], a[1]);
+
+				message.deliverTo(recipient, maildir.toString());
+				log.info("Routed to {}", maildir);
+
+				// Parse .qmail file for forwards/deliveries (if it exists)
+				dotQmail.route(message);
+			} finally {
+				MDC.remove("to");
+				final long elapsed = System.currentTimeMillis() - start;
+				counters.add("time.optima", elapsed);
+				counters.add("count.optima", 1);
 			}
-
-			// Find a maildir
-			Maildir maildir = maildirSource.get(a[0], a[1]);
-
-			// TODO Parse .qmail file for forwards (should it be handled by maildir delivery agent?)
-			message.deliverTo(recipient, maildir.toString());
-			log.info("Routed to {}", maildir);
 		}
 	}
 
 	@Inject
 	private ClamAVMessageProcessor clamAV;
 
-	private Logger log = LoggerFactory.getLogger(getClass());
+	@Inject
+	private Counters counters;
+
+	@Inject
+	private DotQmailMessageProcessor dotQmail;
+
+	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	@Inject
 	private MaildirSource maildirSource;
 
-	private Routing routing;
+	private final Routing routing;
 
 	@Inject
 	private SpamAssassinMessageProcessor spamAssassin;

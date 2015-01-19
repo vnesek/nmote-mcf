@@ -77,6 +77,23 @@ class Meta {
 		dirty = true;
 	}
 
+	public void deliverTo(Set<String> recipients, String mailbox) {
+		for (Delivery d : deliveries) {
+			if (d.getDestination().equals(mailbox)) {
+				for (String recipient : recipients) {
+				if (d.addRecipient(recipient)) {
+					dirty = true;
+				}
+				}
+				return;
+			}
+		}
+		Delivery d = new Delivery();
+		d.setDestination(mailbox);
+		d.setRecipients(recipients);
+		deliveries.add(d);
+		dirty = true;
+	}
 	public Set<String> getFlags() {
 		if (flags == null) {
 			flags = new HashSet<String>();

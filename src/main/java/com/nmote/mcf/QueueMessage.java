@@ -148,6 +148,10 @@ public class QueueMessage {
 		meta.deliverTo(recipient, mailbox);
 	}
 
+	public void deliverTo(Set<String> recipients, String mailbox) {
+		meta.deliverTo(recipients, mailbox);
+	}
+
 	public InputStream getBodyInputStream() throws IOException {
 		InputStream in = getInputStream();
 		// Search for empty line

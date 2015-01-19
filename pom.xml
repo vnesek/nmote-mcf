@@ -16,6 +16,7 @@
 		<ehcache.version>2.5.0</ehcache.version>
 		<guice.version>4.0-beta5</guice.version>
 		<jackson.version>2.5.0</jackson.version>
+		<junit.version>4.12</junit.version>
 		<jsieve.version>0.5-PATCHED</jsieve.version>
 		<logback.version>1.1.2</logback.version>
 		<lucene.version>4.10.3</lucene.version>
@@ -159,17 +160,16 @@
 			<artifactId>commons-lang3</artifactId>
 			<version>${commons-lang.version}</version>
 		</dependency>
-		<!--
-		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-pool2</artifactId>
-			<version>${commons-pool.version}</version>
-		</dependency>
-		 -->
 		<dependency>
 			<groupId>com.nmote.xr</groupId>
 			<artifactId>nmote-xr</artifactId>
 			<version>${nmote-xr.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	<build>
