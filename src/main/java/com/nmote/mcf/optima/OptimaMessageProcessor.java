@@ -15,6 +15,7 @@ import org.slf4j.MDC;
 import com.nmote.counters.Counters;
 import com.nmote.maildir.Maildir;
 import com.nmote.mcf.DefaultMessageProcessor;
+import com.nmote.mcf.DeliveryMessageProcessor;
 import com.nmote.mcf.DotQmailMessageProcessor;
 import com.nmote.mcf.NonLocalUserException;
 import com.nmote.mcf.QueueMessage;
@@ -65,6 +66,15 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
 	}
 
 	@Override
+	public void deliver(QueueMessage message) throws IOException {
+		delivery.deliver(message);
+	}
+
+	public void redeliver(QueueMessage message) throws IOException {
+		delivery.redeliver(message);
+	};
+
+	@Override
 	public void route(QueueMessage message) throws IOException {
 		// Only local delivery to existing vpopmail accounts
 		for (final String recipient : message.getRecipients()) {
@@ -101,6 +111,9 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
 
 	@Inject
 	private Counters counters;
+
+	@Inject
+	private DeliveryMessageProcessor delivery;
 
 	@Inject
 	private DotQmailMessageProcessor dotQmail;
