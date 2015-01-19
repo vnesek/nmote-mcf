@@ -35,8 +35,8 @@ public class SieveMessageProcessor extends DefaultMessageProcessor {
 	@Override
 	public void route(final QueueMessage message) throws IOException {
 		// Evaluate sieve for each envelope recipient in turn
-		long start = System.currentTimeMillis();
 		for (final String recipient : message.getRecipients()) {
+			long start = System.currentTimeMillis();
 			MDC.put("to", recipient);
 			try {
 				// Evaluate message against a sieve
