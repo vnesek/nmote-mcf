@@ -41,7 +41,7 @@ public class McfDaemon implements Daemon {
 		Properties config = new Config().get();
 		List<AbstractModule> modules = new ArrayList<>();
 		modules.add(new McfModule(config));
-		for (String module : StringUtils.split(config.getProperty("modules"))) {
+		for (String module : StringUtils.split(config.getProperty("modules", ""))) {
 			log.info("Using {}", module);
 			modules.add((AbstractModule) Class.forName(module).newInstance());
 		}
