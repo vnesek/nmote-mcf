@@ -8,6 +8,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -24,16 +27,16 @@ public class ClamAVClient implements Closeable {
 
 	public enum ScanMode {
 		/**
-		 * Scan file or directory (recursively) with archive support enabled (a
-		 * full path is required).
-		 */
-		SCAN,
-
-		/**
 		 * Scan file or directory (recursively) with archive support enabled and
 		 * don't stop the scanning when a virus is found.
 		 */
 		CONTSCAN,
+
+		/**
+		 * Scan file in a standard way or scan directory (recursively) using
+		 * multiple threads (to make the scanning faster on SMP machines).
+		 */
+		MULTISCAN,
 
 		/**
 		 * Scan file or directory (recursively) with archive and special file
@@ -42,11 +45,24 @@ public class ClamAVClient implements Closeable {
 		RAWSCAN,
 
 		/**
-		 * Scan file in a standard way or scan directory (recursively) using
-		 * multiple threads (to make the scanning faster on SMP machines).
+		 * Scan file or directory (recursively) with archive support enabled (a
+		 * full path is required).
 		 */
-		MULTISCAN
+		SCAN
 	};
+
+	private static final String ENCODING = "us-ascii";
+
+	public static void main(String[] args) throws IOException {
+		ClamAVClient c = new ClamAVClient();
+		// c.stats();
+		c.version();
+		// System.out.println(c.ping());
+		// System.err.println(c.instream(new
+		// ByteArrayInputStream(test.getBytes())));
+		System.err.println(c.instream(new FileInputStream("samples/eicar.txt")));
+		c.close();
+	}
 
 	private static final void toNetworkOrder(int c, byte[] b) {
 		b[0] = (byte) ((c >> 24) & 0xff);
@@ -92,6 +108,10 @@ public class ClamAVClient implements Closeable {
 
 	public String getHost() {
 		return host;
+	}
+
+	public String getHostPort() {
+		return getHost() + ':' + getPort();
 	}
 
 	public int getMaxInstreamLength() {
@@ -169,11 +189,59 @@ public class ClamAVClient implements Closeable {
 		return "PONG".equals(sendAndReceive("PING"));
 	}
 
+	/**
+	 * Scan file or directory (recursively) with archive support enabled (a full
+	 * path is required).
+	 *
+	 * @param path
+	 * @return
+	 * @throws IOException
+	 */
+	public synchronized String scan(String path) throws IOException {
+		return scan(path, ScanMode.SCAN);
+	}
+
+	/**
+	 * Scan file or directory according to scan mode
+	 *
+	 * @param path
+	 * @param mode
+	 * @return
+	 * @throws IOException
+	 */
+	public synchronized String scan(String path, ScanMode mode) throws IOException {
+		String normalizedPath = FilenameUtils.normalize(path);
+		return sendAndReceive(mode.toString() + ' ' + normalizedPath);
+	}
+
+	public void setBufferSize(int bufferSize) {
+		if (bufferSize < 128) {
+			bufferSize = 128;
+		}
+		this.bufferSize = bufferSize;
+	}
+
 	public void setHost(String host) {
 		if (host == null) {
 			throw new NullPointerException("host == null");
 		}
 		this.host = host;
+	}
+
+	@Inject
+	public void setHostPort(@Named("clamAV") String hostPort) {
+		if (hostPort != null) {
+			hostPort = hostPort.trim();
+			int colon = hostPort.indexOf(':');
+			if (colon >= 0) {
+				setPort(Integer.parseInt(hostPort.substring(colon + 1)));
+			}
+			if (colon > 0) {
+				setHost(hostPort.substring(0, colon));
+			} else if (colon < 0) {
+				setHost(hostPort);
+			}
+		}
 	}
 
 	public void setMaxInstreamLength(int maxInstreamLength) {
@@ -210,59 +278,6 @@ public class ClamAVClient implements Closeable {
 	 */
 	public synchronized String version() throws IOException {
 		return sendAndReceive("VERSION");
-	}
-
-	/**
-	 * Scan file or directory (recursively) with archive support enabled (a full
-	 * path is required).
-	 *
-	 * @param path
-	 * @return
-	 * @throws IOException
-	 */
-	public synchronized String scan(String path) throws IOException {
-		return scan(path, ScanMode.SCAN);
-	}
-
-	/**
-	 * Scan file or directory according to scan mode
-	 *
-	 * @param path
-	 * @param mode
-	 * @return
-	 * @throws IOException
-	 */
-	public synchronized String scan(String path, ScanMode mode) throws IOException {
-		String normalizedPath = FilenameUtils.normalize(path);
-		return sendAndReceive(mode.toString() + ' ' + normalizedPath);
-	}
-
-	private int maxInstreamLength = 10 * 1024 * 1024;
-	private String host = "localhost";
-	private int port = 3310;
-	private Logger log;
-	private Socket socket;
-	private InputStream in;
-	private OutputStream out;
-	private int bufferSize = 1400;
-
-	private static final String ENCODING = "us-ascii";
-
-	public static void main(String[] args) throws IOException {
-		ClamAVClient c = new ClamAVClient();
-		// c.stats();
-		c.version();
-		// System.out.println(c.ping());
-		//System.err.println(c.instream(new ByteArrayInputStream(test.getBytes())));
-		System.err.println(c.instream(new FileInputStream("samples/eicar.txt")));
-		c.close();
-	}
-
-	public void setBufferSize(int bufferSize) {
-		if (bufferSize < 128) {
-			bufferSize = 128;
-		}
-		this.bufferSize = bufferSize;
 	}
 
 	private synchronized String receive() throws IOException {
@@ -303,4 +318,13 @@ public class ClamAVClient implements Closeable {
 		send(request);
 		return receive();
 	}
+
+	private int bufferSize = 1400;
+	private String host = "localhost";
+	private InputStream in;
+	private Logger log;
+	private int maxInstreamLength = 10 * 1024 * 1024;
+	private OutputStream out;
+	private int port = 3310;
+	private Socket socket;
 }

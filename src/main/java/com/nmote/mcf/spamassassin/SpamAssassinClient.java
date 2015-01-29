@@ -7,6 +7,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import org.apache.commons.io.IOUtils;
@@ -91,6 +93,10 @@ public class SpamAssassinClient {
 		return host;
 	}
 
+	public String getHostPort() {
+		return getHost() + ':' + getPort();
+	}
+
 	public int getPort() {
 		return port;
 	}
@@ -115,6 +121,22 @@ public class SpamAssassinClient {
 			throw new NullPointerException("host == null");
 		}
 		this.host = host;
+	}
+
+	@Inject
+	public void setHostPort(@Named("spamassasin") String hostPort) {
+		if (hostPort != null) {
+			hostPort = hostPort.trim();
+			int colon = hostPort.indexOf(':');
+			if (colon >= 0) {
+				setPort(Integer.parseInt(hostPort.substring(colon + 1)));
+			}
+			if (colon > 0) {
+				setHost(hostPort.substring(0, colon));
+			} else if (colon < 0) {
+				setHost(hostPort);
+			}
+		}
 	}
 
 	public void setPort(int port) {
