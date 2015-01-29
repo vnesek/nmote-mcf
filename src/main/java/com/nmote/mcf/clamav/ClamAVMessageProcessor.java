@@ -27,7 +27,7 @@ public class ClamAVMessageProcessor extends DefaultMessageProcessor {
 					message.getHeader().add("X-MCF-ClamAV", result);
 					message.getFlags().add(QueueMessage.Flags.VIRUS);
 				} else {
-					log.debug("Checked {} in {} ms", message, elapsed);
+					log.debug("Checked for viruses in {} ms", elapsed);
 				}
 			} finally {
 				cavc.close();
