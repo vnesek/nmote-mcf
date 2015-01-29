@@ -23,13 +23,14 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+<!--
     <parent>
         <artifactId>jsieve-project</artifactId>
         <groupId>org.apache.james</groupId>
         <version>0.5-PATCHED</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-
+-->
     <groupId>org.apache.james</groupId>
     <artifactId>apache-jsieve</artifactId>
     <packaging>jar</packaging>
