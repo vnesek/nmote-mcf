@@ -96,7 +96,7 @@ public class ClamAVClient implements Closeable {
 			socket = new Socket(host, port);
 			in = new BufferedInputStream(socket.getInputStream(), 256);
 			out = socket.getOutputStream();
-			log = LoggerFactory.getLogger(getClass() + "." + host.replace('.', '_') + "_" + port);
+			log = LoggerFactory.getLogger("clamav." + host.replace('.', '_') + "_" + port);
 			log.debug("(connected)");
 			out.write("zIDSESSION\0".getBytes(ENCODING));
 		}
