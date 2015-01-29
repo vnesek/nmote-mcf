@@ -93,7 +93,7 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
 				final Maildir maildir = maildirSource.get(a[0], a[1]);
 
 				message.deliverTo(recipient, maildir.toString());
-				log.info("Routed to {}", maildir);
+				log.debug("Routed to {}", maildir);
 
 				// Parse .qmail file for forwards/deliveries (if it exists)
 				dotQmail.route(message);

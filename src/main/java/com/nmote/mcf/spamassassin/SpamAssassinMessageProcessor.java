@@ -20,11 +20,11 @@ public class SpamAssassinMessageProcessor extends DefaultMessageProcessor {
 			SpamAssassinResult result = client.check(message.getInputStream(), message.getSize());
 			long elapsed = System.currentTimeMillis() - start;
 			if (result.isSpam()) {
-				log.debug("Detected spam {} in {} ms => {}", message, elapsed, result);
+				log.debug("Detected spam {} in {} ms", result, elapsed);
 				message.getHeader().add(HEADER_NAME, "True");
 				message.getFlags().add(QueueMessage.Flags.SPAM);
 			} else {
-				log.debug("Checked {} in {} ms => {}", message, elapsed, result);
+				log.debug("Checked {} in {} ms", result, elapsed);
 			}
 			message.getHeader().add(HEADER_NAME + "Score", Float.toString(result.getScore()));
 			message.getHeader().add(HEADER_NAME + "Threshold", Float.toString(result.getThreshold()));

@@ -27,13 +27,13 @@ public class McfMessageHandler implements MessageHandler {
 	}
 
 	public void data(InputStream data) throws RejectException, TooMuchDataException, IOException {
-		if (log.isDebugEnabled()) {
-			log.debug("Data");
-		}
-
 		try {
 			// Build QueueMessage from input data and envelope
 			this.msg.create(data);
+
+			if (log.isDebugEnabled()) {
+				log.debug("Data {}", msg);
+			}
 
 			// First chech message for viruses
 			processor.check(this.msg);

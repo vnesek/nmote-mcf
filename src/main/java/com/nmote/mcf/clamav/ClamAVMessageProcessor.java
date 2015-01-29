@@ -23,7 +23,7 @@ public class ClamAVMessageProcessor extends DefaultMessageProcessor {
 				String result = cavc.instream(message.getInputStream());
 				long elapsed = System.currentTimeMillis() - start;
 				if (result != null) {
-					log.debug("Detected virus {} in {} ms => {}", message, elapsed, result);
+					log.debug("Detected virus {} in {} ms", result, elapsed);
 					message.getHeader().add("X-MCF-ClamAV", result);
 					message.getFlags().add(QueueMessage.Flags.VIRUS);
 				} else {
