@@ -124,7 +124,7 @@ public class SpamAssassinClient {
 	}
 
 	@Inject
-	public void setHostPort(@Named("spamassasin") String hostPort) {
+	public void setHostPort(@Named("spamassassin") String hostPort) {
 		if (hostPort != null) {
 			hostPort = hostPort.trim();
 			int colon = hostPort.indexOf(':');
