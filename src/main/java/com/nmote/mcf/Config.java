@@ -86,7 +86,7 @@ public class Config implements Provider<Properties> {
 				in.close();
 				log.info("Loaded configuration {}", fileName);
 			} catch (Throwable t) {
-				log.debug("Failed to load configuration {}: {}", new Object[] { fileName, t.getMessage() });
+				log.warn("Failed to load configuration {}: {}", fileName, t.getMessage());
 			}
 		}
 		return config;
