@@ -111,7 +111,8 @@ public class MBoxDeliveryAgent implements DeliveryAgent {
 		this.appendIdToFromLine = addMoreinfo;
 	}
 
-	public void setKeepHeaderIntact(boolean keepHeaderIntact) {
+	@Inject
+	public void setKeepHeaderIntact(@Named("originalHeaders") boolean keepHeaderIntact) {
 		this.keepHeaderIntact = keepHeaderIntact;
 	}
 

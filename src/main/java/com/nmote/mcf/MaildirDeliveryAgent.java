@@ -111,7 +111,8 @@ public class MaildirDeliveryAgent implements DeliveryAgent {
 		this.autoCreate = autoCreate;
 	}
 
-	public void setKeepHeaderIntact(boolean keepHeaderIntact) {
+	@Inject
+	public void setKeepHeaderIntact(@Named("originalHeaders") boolean keepHeaderIntact) {
 		this.keepHeaderIntact = keepHeaderIntact;
 	}
 
