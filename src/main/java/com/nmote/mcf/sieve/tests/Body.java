@@ -19,70 +19,66 @@
 
 package com.nmote.mcf.sieve.tests;
 
-import java.util.List;
-
-import org.apache.jsieve.Argument;
-import org.apache.jsieve.Arguments;
-import org.apache.jsieve.SieveContext;
-import org.apache.jsieve.StringListArgument;
-import org.apache.jsieve.TagArgument;
+import org.apache.jsieve.*;
 import org.apache.jsieve.exception.SieveException;
 import org.apache.jsieve.exception.SyntaxException;
 import org.apache.jsieve.mail.MailAdapter;
 import org.apache.jsieve.tests.AbstractTest;
+
+import java.util.List;
 
 /**
  * Implementation of body extension defined in <a
  * href='http://tools.ietf.org/html/rfc5173'>RFC5173</a>.
  */
 public class Body extends AbstractTest {
-	
-	// This implement body tests of the form
-	// "body :contains ['string' 'string' ....]"
-	protected boolean executeBasic(MailAdapter mail, Arguments args, SieveContext ctx) throws SieveException {
-		// Attempt to fetch content as a string. If we can't do this it's
-		// not a message we can handle.
-		// if (mail.getContentType().indexOf("text/") != 0) {
-		// throw new SieveMailException("Message is not of type 'text'");
-		// }
 
-		// Compare each test string with body, ignoring case
-		for (final String phrase : strings.getList()) {
-			if (mail.isInBodyText(phrase)) {
-				return true;
-			}
-		}
-		return false;
-	}
+    // This implement body tests of the form
+    // "body :contains ['string' 'string' ....]"
+    protected boolean executeBasic(MailAdapter mail, Arguments args, SieveContext ctx) throws SieveException {
+        // Attempt to fetch content as a string. If we can't do this it's
+        // not a message we can handle.
+        // if (mail.getContentType().indexOf("text/") != 0) {
+        // throw new SieveMailException("Message is not of type 'text'");
+        // }
 
-	// TODO: Check how complete this is of the body specification
-	// Validate (sorta); we're only implementing part of the spec
-	protected void validateArguments(Arguments args, SieveContext ctx) throws SieveException {
+        // Compare each test string with body, ignoring case
+        for (final String phrase : strings.getList()) {
+            if (mail.isInBodyText(phrase)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-		final List<Argument> arglist = args.getArgumentList();
-		if (arglist.size() != 2) {
-			throw new SyntaxException("Currently body-test can only two arguments");
-		}
+    // TODO: Check how complete this is of the body specification
+    // Validate (sorta); we're only implementing part of the spec
+    protected void validateArguments(Arguments args, SieveContext ctx) throws SieveException {
 
-		// TODO: FIXME: As this is a limited implementation force the use of
-		// ':contains'.
-		Argument arg = arglist.get(0);
-		if (!(arg instanceof TagArgument)) {
-			throw new SyntaxException("Body expects a :contains tag");
-		}
+        final List<Argument> arglist = args.getArgumentList();
+        if (arglist.size() != 2) {
+            throw new SyntaxException("Currently body-test can only two arguments");
+        }
 
-		if (!((TagArgument) arg).getTag().equals(":contains")) {
-			throw new SyntaxException("Body expects a :contains tag");
-		}
+        // TODO: FIXME: As this is a limited implementation force the use of
+        // ':contains'.
+        Argument arg = arglist.get(0);
+        if (!(arg instanceof TagArgument)) {
+            throw new SyntaxException("Body expects a :contains tag");
+        }
 
-		// Get list of strings to search for
-		arg = arglist.get(1);
-		if (!(arg instanceof StringListArgument)) {
-			throw new SyntaxException("Body expects a list of strings");
-		}
-		strings = (StringListArgument) args.getArgumentList().get(1);
-	}
+        if (!((TagArgument) arg).getTag().equals(":contains")) {
+            throw new SyntaxException("Body expects a :contains tag");
+        }
 
-	private StringListArgument strings;
+        // Get list of strings to search for
+        arg = arglist.get(1);
+        if (!(arg instanceof StringListArgument)) {
+            throw new SyntaxException("Body expects a list of strings");
+        }
+        strings = (StringListArgument) args.getArgumentList().get(1);
+    }
+
+    private StringListArgument strings;
 
 }

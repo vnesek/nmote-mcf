@@ -4,15 +4,15 @@ import java.util.Collection;
 
 public interface Counters {
 
-	void add(String counter, long value);
-	
-	long collapse(String counter, long time);
+    void add(String counter, long value);
 
-	Collection<String> counters();
+    long collapse(String counter, long time);
 
-	void reset(String counter);
-	
-	long value(String counter);
+    Collection<String> counters();
 
-	long value(String counter, long time);
+    void reset(String counter);
+
+    long value(String counter);
+
+    long value(String counter, long time);
 }

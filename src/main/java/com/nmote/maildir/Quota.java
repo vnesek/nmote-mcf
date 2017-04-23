@@ -4,55 +4,54 @@ import java.io.Serializable;
 
 public class Quota implements Serializable {
 
-	private static final long serialVersionUID = -4697979652948963884L;
+    private static final long serialVersionUID = -4697979652948963884L;
 
-	public int getMaxMessageCount() {
-		return maxMessageCount;
-	}
+    public int getMaxMessageCount() {
+        return maxMessageCount;
+    }
 
-	public long getMaxSize() {
-		return maxSize;
-	}
+    public void setMaxMessageCount(int maxMessages) {
+        this.maxMessageCount = maxMessages;
+    }
 
-	public int getMessageCount() {
-		return messageCount;
-	}
+    public long getMaxSize() {
+        return maxSize;
+    }
 
-	public long getSize() {
-		return size;
-	}
+    public void setMaxSize(long maxSize) {
+        this.maxSize = maxSize;
+    }
 
-	public boolean isOverQuota() {
-		return (maxSize != -1 && size > maxSize) || (maxMessageCount != -1 && messageCount > maxMessageCount);
-	}
+    public int getMessageCount() {
+        return messageCount;
+    }
 
-	public void setMaxMessageCount(int maxMessages) {
-		this.maxMessageCount = maxMessages;
-	}
+    public void setMessageCount(int messages) {
+        this.messageCount = messages;
+    }
 
-	public void setMaxSize(long maxSize) {
-		this.maxSize = maxSize;
-	}
+    public long getSize() {
+        return size;
+    }
 
-	public void setMessageCount(int messages) {
-		this.messageCount = messages;
-	}
+    public void setSize(long used) {
+        this.size = used;
+    }
 
-	public void setSize(long used) {
-		this.size = used;
-	}
+    public boolean isOverQuota() {
+        return (maxSize != -1 && size > maxSize) || (maxMessageCount != -1 && messageCount > maxMessageCount);
+    }
 
-	@Override
-	public String toString() {
-		StringBuilder b = new StringBuilder(40);
-		b.append(size).append('/').append(maxSize).append("S,");
-		b.append(messageCount).append('/').append(maxMessageCount).append('C');
-		return b.toString();
-	}
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder(40);
+        b.append(size).append('/').append(maxSize).append("S,");
+        b.append(messageCount).append('/').append(maxMessageCount).append('C');
+        return b.toString();
+    }
 
-	private int maxMessageCount = -1;
-	private long maxSize = -1;
-	private long size;
-
-	private int messageCount;
+    private int maxMessageCount = -1;
+    private long maxSize = -1;
+    private long size;
+    private int messageCount;
 }

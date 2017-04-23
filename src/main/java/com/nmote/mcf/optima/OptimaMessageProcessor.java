@@ -1,130 +1,124 @@
 package com.nmote.mcf.optima;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-
-import javax.inject.Inject;
-import javax.inject.Named;
-
+import com.nmote.counters.Counters;
+import com.nmote.maildir.Maildir;
+import com.nmote.mcf.*;
+import com.nmote.mcf.clamav.ClamAVMessageProcessor;
+import com.nmote.mcf.spamassassin.SpamAssassinMessageProcessor;
+import com.nmote.xr.Fault;
+import com.nmote.xr.XR;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import com.nmote.counters.Counters;
-import com.nmote.maildir.Maildir;
-import com.nmote.mcf.DefaultMessageProcessor;
-import com.nmote.mcf.DeliveryMessageProcessor;
-import com.nmote.mcf.DotQmailMessageProcessor;
-import com.nmote.mcf.NonLocalUserException;
-import com.nmote.mcf.QueueMessage;
-import com.nmote.mcf.RejectException;
-import com.nmote.mcf.clamav.ClamAVMessageProcessor;
-import com.nmote.mcf.spamassassin.SpamAssassinMessageProcessor;
-import com.nmote.xr.Fault;
-import com.nmote.xr.XR;
+import javax.inject.Inject;
+import javax.inject.Named;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public class OptimaMessageProcessor extends DefaultMessageProcessor {
 
-	@Inject
-	public OptimaMessageProcessor(@Named("ompAddress") String ompAddress) throws URISyntaxException {
-		routing = XR.proxy(new URI(ompAddress), Routing.class);
-	}
+    @Inject
+    public OptimaMessageProcessor(@Named("ompAddress") String ompAddress) throws URISyntaxException {
+        routing = XR.proxy(new URI(ompAddress), Routing.class);
+    }
 
-	@Override
-	public void check(QueueMessage message) throws IOException {
-		// SpamAssassin
-		try {
-			spamAssassin.check(message);
-		} catch (IOException ioe) {
-			log.error("SpamAssassin check failed for {}", message, ioe);
-		}
+    @Override
+    public void check(QueueMessage message) throws IOException {
+        // SpamAssassin
+        try {
+            spamAssassin.check(message);
+        } catch (IOException ioe) {
+            log.error("SpamAssassin check failed for {}", message, ioe);
+        }
 
-		// ClamAV
-		try {
-			clamAV.check(message);
-		} catch (IOException ioe) {
-			log.error("ClamAV check failed for {}", message, ioe);
-		}
-	}
+        // ClamAV
+        try {
+            clamAV.check(message);
+        } catch (IOException ioe) {
+            log.error("ClamAV check failed for {}", message, ioe);
+        }
+    }
 
-	@Override
-	public void checkRecipient(String recipient) throws RejectException {
-		try {
-			String address = routing.resolveEmail(recipient, "optinet.hr");
-			if (address.equalsIgnoreCase(recipient)) {
-				log.debug("Accepted {}", recipient);
-			} else {
-				log.debug("Accepted {} => {}", recipient, address);
-			}
-		} catch (Fault f) {
-			throw new NonLocalUserException();
-		} catch (Throwable t) {
-			throw new RejectException();
-		}
-	}
+    @Override
+    public void checkRecipient(String recipient) throws RejectException {
+        try {
+            String address = routing.resolveEmail(recipient, "optinet.hr");
+            if (address.equalsIgnoreCase(recipient)) {
+                log.debug("Accepted {}", recipient);
+            } else {
+                log.debug("Accepted {} => {}", recipient, address);
+            }
+        } catch (Fault f) {
+            throw new NonLocalUserException();
+        } catch (Throwable t) {
+            throw new RejectException();
+        }
+    }
 
-	@Override
-	public void deliver(QueueMessage message) throws IOException {
-		delivery.deliver(message);
-	}
+    @Override
+    public void deliver(QueueMessage message) throws IOException {
+        delivery.deliver(message);
+    }
 
-	public void redeliver(QueueMessage message) throws IOException {
-		delivery.redeliver(message);
-	};
+    public void redeliver(QueueMessage message) throws IOException {
+        delivery.redeliver(message);
+    }
 
-	@Override
-	public void route(QueueMessage message) throws IOException {
-		// Only local delivery to existing vpopmail accounts
-		for (final String recipient : message.getRecipients()) {
-			final long start = System.currentTimeMillis();
-			MDC.put("to", recipient);
-			try {
-				// Resolve email address
-				final String address = routing.resolveEmail(recipient, "optinet.hr");
-				final String[] a = StringUtils.split(address, '@');
-				if (a.length != 2) {
-					log.error("Invalid recipient {} for {}", recipient, message);
-					throw new IOException("invalid address: " + recipient);
-				}
+    ;
 
-				// Find a maildir
-				final Maildir maildir = maildirSource.get(a[0], a[1]);
+    @Override
+    public void route(QueueMessage message) throws IOException {
+        // Only local delivery to existing vpopmail accounts
+        for (final String recipient : message.getRecipients()) {
+            final long start = System.currentTimeMillis();
+            MDC.put("to", recipient);
+            try {
+                // Resolve email address
+                final String address = routing.resolveEmail(recipient, "optinet.hr");
+                final String[] a = StringUtils.split(address, '@');
+                if (a.length != 2) {
+                    log.error("Invalid recipient {} for {}", recipient, message);
+                    throw new IOException("invalid address: " + recipient);
+                }
 
-				message.deliverTo(recipient, maildir.toString());
-				log.debug("Routed to {}", maildir);
+                // Find a maildir
+                final Maildir maildir = maildirSource.get(a[0], a[1]);
 
-				// Parse .qmail file for forwards/deliveries (if it exists)
-				dotQmail.route(message);
-			} finally {
-				MDC.remove("to");
-				final long elapsed = System.currentTimeMillis() - start;
-				counters.add("time.optima", elapsed);
-				counters.add("count.optima", 1);
-			}
-		}
-	}
+                message.deliverTo(recipient, maildir.toString());
+                log.debug("Routed to {}", maildir);
 
-	@Inject
-	private ClamAVMessageProcessor clamAV;
+                // Parse .qmail file for forwards/deliveries (if it exists)
+                dotQmail.route(message);
+            } finally {
+                MDC.remove("to");
+                final long elapsed = System.currentTimeMillis() - start;
+                counters.add("time.optima", elapsed);
+                counters.add("count.optima", 1);
+            }
+        }
+    }
 
-	@Inject
-	private Counters counters;
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final Routing routing;
 
-	@Inject
-	private DeliveryMessageProcessor delivery;
+    @Inject
+    private ClamAVMessageProcessor clamAV;
 
-	@Inject
-	private DotQmailMessageProcessor dotQmail;
+    @Inject
+    private Counters counters;
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+    @Inject
+    private DeliveryMessageProcessor delivery;
 
-	@Inject
-	private MaildirSource maildirSource;
+    @Inject
+    private DotQmailMessageProcessor dotQmail;
 
-	private final Routing routing;
+    @Inject
+    private MaildirSource maildirSource;
 
-	@Inject
-	private SpamAssassinMessageProcessor spamAssassin;
+    @Inject
+    private SpamAssassinMessageProcessor spamAssassin;
 }

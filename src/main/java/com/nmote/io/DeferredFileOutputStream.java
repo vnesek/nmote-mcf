@@ -17,17 +17,10 @@ package com.nmote.io;
  * limitations under the License.
  */
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ThresholdingOutputStream;
+
+import java.io.*;
 
 /**
  * An output stream which will retain data in memory until a specified threshold
@@ -38,165 +31,155 @@ import org.apache.commons.io.output.ThresholdingOutputStream;
  * know in advance the size of the file being uploaded. If the file is small you
  * want to store it in memory (for speed), but if the file is large you want to
  * store it to file (to avoid memory issues).
- * 
+ *
  * @author <a href="mailto:martinc@apache.org">Martin Cooper</a>
  * @author gaxzerow
- * 
  * @version $Id: DeferredFileOutputStream.java 736890 2009-01-23 02:02:22Z
  *          niallp $
  */
 public class DeferredFileOutputStream extends ThresholdingOutputStream {
 
-	// ----------------------------------------------------------- Data members
+    // ----------------------------------------------------------- Data members
 
-	/**
-	 * The output stream to which data will be written prior to the theshold
-	 * being reached.
-	 */
-	private ByteArrayOutputStream memoryOutputStream;
+    /**
+     * Constructs an instance of this class which will trigger an event at the
+     * specified threshold, and save data either to a file beyond that point.
+     *
+     * @param threshold  The number of bytes at which to trigger an event.
+     * @param outputFile The file to which data is saved beyond the threshold.
+     */
+    public DeferredFileOutputStream(int threshold, File outputFile) {
+        super(threshold);
+        this.outputFile = outputFile;
 
-	/**
-	 * The output stream to which data will be written at any given time. This
-	 * will always be one of <code>memoryOutputStream</code> or
-	 * <code>diskOutputStream</code>.
-	 */
-	private OutputStream currentOutputStream;
+        memoryOutputStream = new ByteArrayOutputStream();
+        currentOutputStream = memoryOutputStream;
+    }
 
-	/**
-	 * The file to which output will be directed if the threshold is exceeded.
-	 */
-	private File outputFile;
+    /**
+     * Returns the current output stream. This may be memory based or disk
+     * based, depending on the current state with respect to the threshold.
+     *
+     * @return The underlying output stream.
+     * @throws IOException if an error occurs.
+     */
+    @Override
+    protected OutputStream getStream() throws IOException {
+        return currentOutputStream;
+    }
 
+    /**
+     * Switches the underlying output stream from a memory based stream to one
+     * that is backed by disk. This is the point at which we realise that too
+     * much data is being written to keep in memory, so we elect to switch to
+     * disk-based storage.
+     *
+     * @throws IOException if an error occurs.
+     */
+    @Override
+    protected void thresholdReached() throws IOException {
+        OutputStream fos = new BufferedOutputStream(new FileOutputStream(outputFile));
+        memoryOutputStream.writeTo(fos);
+        currentOutputStream = fos;
+        memoryOutputStream = null;
+    }
 
-	/**
-	 * True when close() has been called successfully.
-	 */
-	private boolean closed;
+    /**
+     * Determines whether or not the data for this output stream has been
+     * retained in memory.
+     *
+     * @return <code>true</code> if the data is available in memory;
+     * <code>false</code> otherwise.
+     */
+    public boolean isInMemory() {
+        return (!isThresholdExceeded());
+    }
 
-	// ----------------------------------------------------------- Constructors
+    // ----------------------------------------------------------- Constructors
 
-	/**
-	 * Constructs an instance of this class which will trigger an event at the
-	 * specified threshold, and save data either to a file beyond that point.
-	 * 
-	 * @param threshold
-	 *            The number of bytes at which to trigger an event.
-	 * @param outputFile
-	 *            The file to which data is saved beyond the threshold.
-	 */
-	public DeferredFileOutputStream(int threshold, File outputFile) {
-		super(threshold);
-		this.outputFile = outputFile;
+    /**
+     * Closes underlying output stream, and mark this as closed
+     *
+     * @throws IOException if an error occurs.
+     */
+    @Override
+    public void close() throws IOException {
+        super.close();
+        closed = true;
+    }
 
-		memoryOutputStream = new ByteArrayOutputStream();
-		currentOutputStream = memoryOutputStream;
-	}
+    // --------------------------------------- ThresholdingOutputStream methods
 
-	// --------------------------------------- ThresholdingOutputStream methods
+    /**
+     * Writes the data from this output stream to the specified output stream,
+     * after it has been closed.
+     *
+     * @param out output stream to write to.
+     * @throws IOException if this stream is not yet closed or an error occurs.
+     */
+    public void writeTo(OutputStream out) throws IOException {
+        // we may only need to check if this is closed if we are working with a
+        // file
+        // but we should force the habit of closing wether we are working with
+        // a file or memory.
+        if (!closed) {
+            throw new IOException("Stream not closed");
+        }
 
-	/**
-	 * Returns the current output stream. This may be memory based or disk
-	 * based, depending on the current state with respect to the threshold.
-	 * 
-	 * @return The underlying output stream.
-	 * 
-	 * @exception IOException
-	 *                if an error occurs.
-	 */
-	@Override
-	protected OutputStream getStream() throws IOException {
-		return currentOutputStream;
-	}
+        if (isInMemory()) {
+            memoryOutputStream.writeTo(out);
+        } else {
+            FileInputStream fis = new FileInputStream(outputFile);
+            try {
+                IOUtils.copy(fis, out);
+            } finally {
+                IOUtils.closeQuietly(fis);
+            }
+        }
+    }
 
-	/**
-	 * Switches the underlying output stream from a memory based stream to one
-	 * that is backed by disk. This is the point at which we realise that too
-	 * much data is being written to keep in memory, so we elect to switch to
-	 * disk-based storage.
-	 * 
-	 * @exception IOException
-	 *                if an error occurs.
-	 */
-	@Override
-	protected void thresholdReached() throws IOException {
-		OutputStream fos = new BufferedOutputStream(new FileOutputStream(outputFile));
-		memoryOutputStream.writeTo(fos);
-		currentOutputStream = fos;
-		memoryOutputStream = null;
-	}
+    public InputStream toBufferedInputStream() throws IOException {
+        if (!closed) {
+            throw new IOException("Stream not closed");
+        }
+        if (isInMemory()) {
+            return memoryOutputStream.toBufferedInputStream();
+        } else {
+            return new BufferedInputStream(new FileInputStream(outputFile));
+        }
+    }
 
-	// --------------------------------------------------------- Public methods
+    // --------------------------------------------------------- Public methods
 
-	/**
-	 * Determines whether or not the data for this output stream has been
-	 * retained in memory.
-	 * 
-	 * @return <code>true</code> if the data is available in memory;
-	 *         <code>false</code> otherwise.
-	 */
-	public boolean isInMemory() {
-		return (!isThresholdExceeded());
-	}
+    public void writeToFile() throws IOException {
+        if (isInMemory()) {
+            thresholdReached();
+            if (closed) {
+                close();
+            }
+        }
+    }
 
-	/**
-	 * Closes underlying output stream, and mark this as closed
-	 * 
-	 * @exception IOException
-	 *                if an error occurs.
-	 */
-	@Override
-	public void close() throws IOException {
-		super.close();
-		closed = true;
-	}
+    /**
+     * The output stream to which data will be written prior to the theshold
+     * being reached.
+     */
+    private ByteArrayOutputStream memoryOutputStream;
 
-	/**
-	 * Writes the data from this output stream to the specified output stream,
-	 * after it has been closed.
-	 * 
-	 * @param out
-	 *            output stream to write to.
-	 * @exception IOException
-	 *                if this stream is not yet closed or an error occurs.
-	 */
-	public void writeTo(OutputStream out) throws IOException {
-		// we may only need to check if this is closed if we are working with a
-		// file
-		// but we should force the habit of closing wether we are working with
-		// a file or memory.
-		if (!closed) {
-			throw new IOException("Stream not closed");
-		}
+    /**
+     * The output stream to which data will be written at any given time. This
+     * will always be one of <code>memoryOutputStream</code> or
+     * <code>diskOutputStream</code>.
+     */
+    private OutputStream currentOutputStream;
 
-		if (isInMemory()) {
-			memoryOutputStream.writeTo(out);
-		} else {
-			FileInputStream fis = new FileInputStream(outputFile);
-			try {
-				IOUtils.copy(fis, out);
-			} finally {
-				IOUtils.closeQuietly(fis);
-			}
-		}
-	}
+    /**
+     * The file to which output will be directed if the threshold is exceeded.
+     */
+    private File outputFile;
 
-	public InputStream toBufferedInputStream() throws IOException {
-		if (!closed) {
-			throw new IOException("Stream not closed");
-		}
-		if (isInMemory()) {
-			return memoryOutputStream.toBufferedInputStream();
-		} else {
-			return new BufferedInputStream(new FileInputStream(outputFile));
-		}
-	}
-	
-	public void writeToFile() throws IOException {
-		if (isInMemory()) {
-			thresholdReached();
-			if (closed) {
-				close();
-			}
-		}
-	}
+    /**
+     * True when close() has been called successfully.
+     */
+    private boolean closed;
 }

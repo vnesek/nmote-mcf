@@ -3,7 +3,7 @@
 	<logger name="org.apache" level="info" />
 	<logger name="org.subethamail.smtp.server" level="info" />
 	<logger name="com.nmote.mcf.spamassassin.SpamAssassinClient" level="info" />
-	<logger name="com.nmote.mcf.clamav.ClamAVClient" level="info" />
+	<logger name="clamav" level="error" />
 
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
