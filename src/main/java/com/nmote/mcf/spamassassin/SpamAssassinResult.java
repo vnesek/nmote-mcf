@@ -20,7 +20,7 @@ public class SpamAssassinResult implements Serializable {
 
     public Collection<String> getSymbols() {
         if (symbols == null) {
-            symbols = new HashSet<String>();
+            symbols = new HashSet<>();
         }
         return symbols;
     }

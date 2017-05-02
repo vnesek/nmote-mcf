@@ -62,7 +62,7 @@ public class Queue {
     }
 
     public List<String> getMessageIds() throws IOException {
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         File[] files = queueDir.listFiles();
         if (files != null) {
             for (File file : files) {
@@ -119,6 +119,8 @@ public class Queue {
             file = new File(queueDir, id);
             if (!file.exists()) {
                 break;
+            } else {
+                file = null;
             }
         }
         if (file == null) {

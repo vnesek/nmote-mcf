@@ -23,7 +23,7 @@ public class Delivery {
 
     public Set<String> getRecipients() {
         if (recipients == null) {
-            recipients = new HashSet<String>();
+            recipients = new HashSet<>();
         }
         return recipients;
     }

@@ -167,9 +167,7 @@ public class Maildir {
                 }
 
                 quota = new Quota();
-                BufferedReader in = new BufferedReader(new FileReader(maildirSize), 5120);
-                try {
-
+                try (BufferedReader in = new BufferedReader(new FileReader(maildirSize), 5120)) {
                     { // Parse quota definition
                         String line = in.readLine();
                         if (line != null) {
@@ -202,8 +200,6 @@ public class Maildir {
                         quota.setSize(size);
                         quota.setMessageCount(messageCount);
                     }
-                } finally {
-                    in.close();
                 }
             } catch (IOException ignored) {
                 ignored.printStackTrace();

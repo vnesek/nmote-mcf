@@ -56,8 +56,7 @@ public class DeliveryMessageProcessor extends DefaultMessageProcessor {
         // Deliver it. We are using index and size() to allow delivery agents to
         // append additional deliveries.
         List<Delivery> deliveries = message.getDeliveries();
-        for (int idx = 0; idx < deliveries.size(); ++idx) {
-            Delivery d = deliveries.get(idx);
+        for (Delivery d : deliveries) {
             if (!d.isCompleted()) {
                 if (log.isDebugEnabled()) {
                     log.debug("Delivering {}", d);

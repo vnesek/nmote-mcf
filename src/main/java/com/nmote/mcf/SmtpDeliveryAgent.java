@@ -68,7 +68,7 @@ public class SmtpDeliveryAgent implements DeliveryAgent {
                 Response dataEnd = smartClient.dataEnd();
                 delivery.setStatus("pass=>" + delivery.getDestination() + " (" + dataEnd.getMessage() + ')');
                 delivery.setCompleted();
-                log.info("Forwarded {}, written {} bytes, ", new Object[]{msg.getId(), written, dataEnd});
+                log.info("Forwarded {}, written {} bytes, {}", msg.getId(), written, dataEnd);
             } finally {
                 IOUtils.closeQuietly(in);
 
@@ -96,7 +96,7 @@ public class SmtpDeliveryAgent implements DeliveryAgent {
                     copy.setRecipients(delivery.getRecipients());
                     msg.getDeliveries().add(copy);
                 }
-                log.warn("Rejected {} into {}, written {} bytes, {}", new Object[]{msg.getId(), smtpRejectTo, written, response});
+                log.warn("Rejected {} into {}, written {} bytes, {}", msg.getId(), smtpRejectTo, written, response);
             } else {
                 // Force re-delivery, re-throw original exception
                 throw e;
@@ -108,7 +108,7 @@ public class SmtpDeliveryAgent implements DeliveryAgent {
 
     @Inject
     public void setSmtpRejectCodes(@Named("smtpRejectCodes") String codes) {
-        smtpRejectCodes = new HashSet<Integer>();
+        smtpRejectCodes = new HashSet<>();
         for (String s : StringUtils.split(codes)) {
             smtpRejectCodes.add(Integer.parseInt(s));
         }

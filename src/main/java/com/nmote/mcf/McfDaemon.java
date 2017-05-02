@@ -5,7 +5,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.apache.commons.daemon.Daemon;
 import org.apache.commons.daemon.DaemonContext;
-import org.apache.commons.daemon.DaemonInitException;
 import org.apache.commons.daemon.support.DaemonLoader.Context;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -34,7 +33,7 @@ public class McfDaemon implements Daemon {
     }
 
     @Override
-    public void init(DaemonContext ctx) throws DaemonInitException, Exception {
+    public void init(DaemonContext ctx) throws Exception {
         ToStringBuilder.setDefaultStyle(ToStringStyle.SHORT_PREFIX_STYLE);
 
         Properties config = new Config().get();

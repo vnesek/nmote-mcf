@@ -56,8 +56,6 @@ public class SieveMessageProcessor extends DefaultMessageProcessor {
                         }
                     }
 
-                    ;
-
                     @Override
                     public List<String> getEnvelope(String name) throws SieveMailException {
                         if (name.equalsIgnoreCase("to")) {
@@ -104,10 +102,13 @@ public class SieveMessageProcessor extends DefaultMessageProcessor {
 
     @Inject
     private SieveFactory sieveFactory;
+
     @Inject
     private Provider<Node> sieve;
+
     @Inject
     private LuceneQueryParser queryParser;
+
     @Inject
     private Counters counters;
 

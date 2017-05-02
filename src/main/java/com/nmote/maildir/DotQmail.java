@@ -53,9 +53,7 @@ public class DotQmail implements Iterable<String> {
 
     public DotQmail load(InputStream in) throws IOException {
         clear();
-        for (String line : IOUtils.readLines(in, StandardCharsets.ISO_8859_1)) {
-            lines.add(line);
-        }
+        lines.addAll(IOUtils.readLines(in, StandardCharsets.ISO_8859_1));
         return this;
     }
 
@@ -72,8 +70,7 @@ public class DotQmail implements Iterable<String> {
     }
 
     public DotQmail remove(String line) {
-        while (lines.remove(line)) {
-        }
+        while (lines.remove(line));
         return this;
     }
 

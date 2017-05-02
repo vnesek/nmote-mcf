@@ -66,7 +66,7 @@ public class MBoxOutputStream extends FilterOutputStream {
         }
     }
 
-    private final void writeInternal(int b) throws IOException {
+    private void writeInternal(int b) throws IOException {
         switch (state) {
             case 0:
                 // BOL

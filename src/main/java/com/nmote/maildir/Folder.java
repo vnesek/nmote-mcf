@@ -67,11 +67,9 @@ public final class Folder {
                 String name = file.getName();
                 return file.isDirectory() && name.startsWith(prefix) && name.indexOf('.', prefix.length() + 1) == -1;
             }
-
-            ;
         });
         if (files != null) {
-            List<Folder> result = new ArrayList<Folder>(files.length);
+            List<Folder> result = new ArrayList<>(files.length);
             for (File file : files) {
                 result.add(new Folder(maildir, this, file));
             }

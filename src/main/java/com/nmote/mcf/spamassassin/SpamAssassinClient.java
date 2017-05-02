@@ -37,11 +37,9 @@ public class SpamAssassinClient {
         OutputStream out = socket.getOutputStream();
         try {
             int total = 0;
-            StringBuffer b = new StringBuffer(128);
-            b.append("SYMBOLS SPAMC/").append(protocol).append("\r\n");
-            b.append("Content-length: ").append(contentLength).append("\r\n");
-            b.append("User: ").append(user).append("\r\n\r\n");
-            String request = b.toString();
+            String request = "SYMBOLS SPAMC/" + protocol + "\r\n" +
+                    "Content-length: " + contentLength + "\r\n" +
+                    "User: " + user + "\r\n\r\n";
             out.write(request.getBytes(ENCODING));
             // log.debug("<< {}", request);
             byte[] buffer = new byte[bufferSize];

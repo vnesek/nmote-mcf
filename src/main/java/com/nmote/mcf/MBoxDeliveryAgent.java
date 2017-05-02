@@ -20,7 +20,7 @@ import java.util.Set;
 
 public class MBoxDeliveryAgent implements DeliveryAgent {
 
-    private static final Set<File> lockedFiles = new HashSet<File>();
+    private static final Set<File> lockedFiles = new HashSet<>();
 
     private static String formatAsctime(Date date) {
         String s = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").format(date);

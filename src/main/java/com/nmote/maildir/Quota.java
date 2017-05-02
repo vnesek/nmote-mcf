@@ -44,10 +44,8 @@ public class Quota implements Serializable {
 
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder(40);
-        b.append(size).append('/').append(maxSize).append("S,");
-        b.append(messageCount).append('/').append(maxMessageCount).append('C');
-        return b.toString();
+        return String.valueOf(size) + '/' + maxSize + "S," +
+                messageCount + '/' + maxMessageCount + 'C';
     }
 
     private int maxMessageCount = -1;

@@ -58,7 +58,7 @@ public class ClamAVClient implements Closeable {
         c.close();
     }
 
-    private static final void toNetworkOrder(int c, byte[] b) {
+    private static void toNetworkOrder(int c, byte[] b) {
         b[0] = (byte) ((c >> 24) & 0xff);
         b[1] = (byte) ((c >> 16) & 0xff);
         b[2] = (byte) ((c >> 8) & 0xff);

@@ -53,6 +53,8 @@ public class MaildirDeliveryAgent implements DeliveryAgent {
             tmpFile = new File(tmp, unique);
             if (tmpFile.createNewFile()) {
                 break;
+            } else {
+                tmpFile = null;
             }
             long toSleep = new Random().nextInt(500);
             try {

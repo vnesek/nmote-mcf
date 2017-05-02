@@ -8,7 +8,6 @@ import org.slf4j.MDC;
 import org.subethamail.smtp.MessageContext;
 import org.subethamail.smtp.MessageHandler;
 import org.subethamail.smtp.RejectException;
-import org.subethamail.smtp.TooMuchDataException;
 import org.subethamail.smtp.server.Session;
 
 import java.io.IOException;
@@ -27,7 +26,7 @@ public class McfMessageHandler implements MessageHandler {
         this.start = System.currentTimeMillis();
     }
 
-    public void data(InputStream data) throws RejectException, TooMuchDataException, IOException {
+    public void data(InputStream data) throws RejectException, IOException {
         try {
             // Build QueueMessage from input data and envelope
             this.msg.create(data);

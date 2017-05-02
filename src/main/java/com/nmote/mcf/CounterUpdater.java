@@ -26,20 +26,18 @@ public class CounterUpdater implements Runnable {
                 this.notifyAll();
             }
 
-            out:
             while (this.running) {
                 try {
                     // Wait for next run
                     synchronized (this) {
                         if (this.interval <= 0) {
-                            break out;
+                            break;
                         }
                         this.wait(interval * 1000);
                     }
 
                     // Save counters
                     saveCounters(counters, countersFile);
-
                 } catch (Throwable t) {
                     log.error("Failed to sync counters file {}", countersFile, t);
                 }
@@ -66,7 +64,7 @@ public class CounterUpdater implements Runnable {
 
             // Format counters in a human readable format
             long time = System.currentTimeMillis() - interval;
-            SortedMap<String, SortedMap<String, Number>> stats = new TreeMap<String, SortedMap<String, Number>>();
+            SortedMap<String, SortedMap<String, Number>> stats = new TreeMap<>();
             for (String c : counters.counters()) {
                 long v = last ? counters.collapse(c, time) : counters.value(c, time);
                 int idx = c.indexOf('.');
@@ -74,7 +72,7 @@ public class CounterUpdater implements Runnable {
                 String k2 = c.substring(0, idx);
                 SortedMap<String, Number> e = stats.get(k1);
                 if (e == null) {
-                    e = new TreeMap<String, Number>();
+                    e = new TreeMap<>();
                     stats.put(k1, e);
                 }
                 e.put(k2, v);

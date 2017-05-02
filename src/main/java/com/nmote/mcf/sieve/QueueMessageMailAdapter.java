@@ -23,11 +23,11 @@ public class QueueMessageMailAdapter implements MailAdapter, EnvelopeAccessors {
     private static final Address[] NO_ADDRESSES = new Address[0];
 
     private static final List<String> NO_VALUES = Collections.emptyList();
-    private static final List<String> ENVELOPE_NAMES = Arrays.asList(new String[]{"From", "To"});
+    private static final List<String> ENVELOPE_NAMES = Arrays.asList("From", "To");
 
-    public QueueMessageMailAdapter(QueueMessage message) throws IOException {
+    public QueueMessageMailAdapter(QueueMessage message) {
         this.msg = message;
-        this.actions = new ArrayList<Action>();
+        this.actions = new ArrayList<>();
     }
 
     public void addAction(Action action) {
@@ -73,7 +73,7 @@ public class QueueMessageMailAdapter implements MailAdapter, EnvelopeAccessors {
 
     public List<String> getHeaderNames() throws SieveMailException {
         Set<String> r = msg.getHeader().getFieldNames();
-        return r == null ? NO_VALUES : new ArrayList<String>(r);
+        return r == null ? NO_VALUES : new ArrayList<>(r);
     }
 
     public List<String> getMatchingEnvelope(String name) throws SieveMailException {
@@ -89,7 +89,7 @@ public class QueueMessageMailAdapter implements MailAdapter, EnvelopeAccessors {
     }
 
     public int getSize() throws SieveMailException {
-        return (int) msg.getSize();
+        return msg.getSize();
     }
 
     public boolean isInBodyText(String phraseCaseInsensitive) throws SieveMailException {
@@ -131,5 +131,5 @@ public class QueueMessageMailAdapter implements MailAdapter, EnvelopeAccessors {
 
     protected final QueueMessage msg;
     protected SieveContext ctx;
-    private List<Action> actions = new ArrayList<Action>();
+    private List<Action> actions = new ArrayList<>();
 }

@@ -16,8 +16,7 @@ public class ClamAVMessageProcessor extends DefaultMessageProcessor {
         if (!message.getFlags().contains(QueueMessage.Flags.VIRUS)) {
             long start = System.currentTimeMillis();
 
-            ClamAVClient cavc = client.get();
-            try {
+            try (ClamAVClient cavc = client.get()) {
                 String result = cavc.instream(message.getInputStream());
                 long elapsed = System.currentTimeMillis() - start;
                 if (result != null) {
@@ -27,8 +26,6 @@ public class ClamAVMessageProcessor extends DefaultMessageProcessor {
                 } else {
                     log.debug("Checked for viruses in {} ms", elapsed);
                 }
-            } finally {
-                cavc.close();
             }
         }
     }

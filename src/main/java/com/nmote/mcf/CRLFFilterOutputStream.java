@@ -54,7 +54,7 @@ public class CRLFFilterOutputStream extends FilterOutputStream {
         writeInternal(b);
     }
 
-    private final void writeInternal(int b) throws IOException {
+    private void writeInternal(int b) throws IOException {
         if (cr) {
             if (b == LF) {
                 super.write(LF);

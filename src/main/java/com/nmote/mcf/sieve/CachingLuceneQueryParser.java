@@ -12,7 +12,7 @@ public class CachingLuceneQueryParser implements LuceneQueryParser {
         assert delegate != null;
 
         this.delegate = delegate;
-        this.cache = new HashMap<String, Query>();
+        this.cache = new HashMap<>();
     }
 
     public Query parse(String text) throws SieveException {
@@ -29,6 +29,6 @@ public class CachingLuceneQueryParser implements LuceneQueryParser {
         return result;
     }
 
-    private LuceneQueryParser delegate;
-    private Map<String, Query> cache;
+    private final LuceneQueryParser delegate;
+    private final Map<String, Query> cache;
 }

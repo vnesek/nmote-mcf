@@ -69,7 +69,7 @@ public class DefaultCounters implements Counters {
     @Override
     public Collection<String> counters() {
         synchronized (nodes) {
-            return new TreeSet<String>(nodes.keySet());
+            return new TreeSet<>(nodes.keySet());
         }
     }
 
@@ -123,7 +123,7 @@ public class DefaultCounters implements Counters {
             return head;
         }
     }
-    private ConcurrentMap<String, Node> nodes = new ConcurrentHashMap<String, Node>();
+    private ConcurrentMap<String, Node> nodes = new ConcurrentHashMap<>();
 
     static class Node {
         Node next;

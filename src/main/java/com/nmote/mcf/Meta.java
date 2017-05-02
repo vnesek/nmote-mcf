@@ -41,7 +41,7 @@ class Meta {
 
     public List<String> getRecipients() {
         if (recipients == null) {
-            recipients = new ArrayList<String>();
+            recipients = new ArrayList<>();
         }
         return recipients;
     }
@@ -96,7 +96,7 @@ class Meta {
 
     public Set<String> getFlags() {
         if (flags == null) {
-            flags = new HashSet<String>();
+            flags = new HashSet<>();
         }
         return flags;
     }
@@ -111,5 +111,5 @@ class Meta {
     private String from;
     private List<String> recipients;
     private Header header = new Header();
-    private List<Delivery> deliveries = new ArrayList<Delivery>();
+    private List<Delivery> deliveries = new ArrayList<>();
 }

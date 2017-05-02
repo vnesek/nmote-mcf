@@ -22,7 +22,7 @@ public class SieveProvider implements Provider<Node> {
         this(sieveFactory, new File(sieveFile));
     }
 
-    public SieveProvider(SieveFactory sieveFactory, @Named("sieve") File sieve) throws SieveConfigurationException {
+    public SieveProvider(SieveFactory sieveFactory, @Named("sieve") File sieve) {
         this.sieveFactory = sieveFactory;
         this.sieve = sieve;
     }
@@ -31,13 +31,10 @@ public class SieveProvider implements Provider<Node> {
         long modified = sieve.lastModified();
         if (this.lastModified > System.currentTimeMillis() || node == null) {
             try {
-                InputStream in = new BufferedInputStream(new FileInputStream(sieve), 4096);
-                try {
+                try (InputStream in = new BufferedInputStream(new FileInputStream(sieve), 4096)) {
                     node = sieveFactory.parse(in);
                     log.info("Loaded sieve '{}'", sieve);
                     this.lastModified = modified;
-                } finally {
-                    in.close();
                 }
             } catch (FileNotFoundException e) {
                 if (node == null) {

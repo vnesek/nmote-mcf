@@ -17,10 +17,11 @@ public class Header implements Serializable {
 
     public Header(Header header) {
         if (header.fields != null) {
-            Map<String, List<HeaderField>> f = new HashMap<String, List<HeaderField>>();
+            Map<String, List<HeaderField>> f = new HashMap<>();
             for (Map.Entry<String, List<HeaderField>> e : header.fields.entrySet()) {
-                f.put(e.getKey(), new ArrayList<HeaderField>(e.getValue()));
+                f.put(e.getKey(), new ArrayList<>(e.getValue()));
             }
+            this.fields = f;
         }
     }
 
@@ -28,7 +29,7 @@ public class Header implements Serializable {
         String key = toKey(name);
         List<HeaderField> field = getFields().get(key);
         if (field == null) {
-            field = new ArrayList<HeaderField>();
+            field = new ArrayList<>();
             getFields().put(key, field);
         }
         field.add(new HeaderField(name, value));
@@ -58,7 +59,7 @@ public class Header implements Serializable {
 
     @JsonIgnore
     public Set<HeaderField> fields() {
-        Set<HeaderField> result = new HashSet<HeaderField>();
+        Set<HeaderField> result = new HashSet<>();
         if (fields != null) {
             for (List<HeaderField> f : getFields().values()) {
                 result.addAll(f);
@@ -87,7 +88,7 @@ public class Header implements Serializable {
             if (fields != null) {
                 int len = fields.size();
                 if (len > 0) {
-                    result = new ArrayList<String>(len);
+                    result = new ArrayList<>(len);
                     for (HeaderField e : fields) {
                         if (!exact || name.equals(e.getName())) {
                             result.add(e.getValue());
@@ -106,7 +107,7 @@ public class Header implements Serializable {
 
     public Map<String, List<HeaderField>> getFields() {
         if (fields == null) {
-            fields = new LinkedHashMap<String, List<HeaderField>>();
+            fields = new LinkedHashMap<>();
         }
         return fields;
     }
@@ -131,7 +132,7 @@ public class Header implements Serializable {
             if (field != null) {
                 field.clear();
             } else {
-                field = new ArrayList<HeaderField>();
+                field = new ArrayList<>();
                 fields.put(key, field);
             }
             field.add(new HeaderField(name, value));
@@ -212,10 +213,7 @@ public class Header implements Serializable {
                 return false;
             }
             HeaderField other = (HeaderField) obj;
-            if (!name.equalsIgnoreCase(other.name)) {
-                return false;
-            }
-            return value.equals(other.value);
+            return name.equalsIgnoreCase(other.name) && value.equals(other.value);
         }
 
         public String getName() {
