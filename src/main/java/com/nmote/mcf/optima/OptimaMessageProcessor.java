@@ -40,11 +40,13 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
     public OptimaMessageProcessor(
             @Named("ompAddress") String ompAddress,
             Counters counters,
-            DeliveryMessageProcessor delivery
+            DeliveryMessageProcessor delivery,
+            @Named("pathRename") String pathRename
     ) throws URISyntaxException {
         this.omp = XR.proxy(new URI(ompAddress), Omp.class);
         this.counters = Objects.requireNonNull(counters);
         this.delivery = Objects.requireNonNull(delivery);
+        this.pathRename = new PathRename(pathRename);
     }
 
     @Override
@@ -85,7 +87,7 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
                 // Resolve email address
                 List<String> destinations = omp.deliverEmail(recipient);
                 for (final String d : destinations) {
-                    message.deliverTo(recipient, d);
+                    message.deliverTo(recipient, pathRename.rename(d));
                 }
                 log.debug("Routed to {}", destinations);
             } finally {
@@ -99,6 +101,7 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final Omp omp;
+    private final PathRename pathRename;
     private Counters counters;
     private DeliveryMessageProcessor delivery;
 

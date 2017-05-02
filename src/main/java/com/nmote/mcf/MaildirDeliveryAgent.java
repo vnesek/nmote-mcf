@@ -1,6 +1,7 @@
 package com.nmote.mcf;
 
 import com.nmote.counters.Counters;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.subethamail.smtp.io.CRLFOutputStream;
@@ -8,6 +9,7 @@ import org.subethamail.smtp.io.CRLFOutputStream;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Random;
 
 public class MaildirDeliveryAgent implements DeliveryAgent {
@@ -29,6 +31,7 @@ public class MaildirDeliveryAgent implements DeliveryAgent {
         if (!maildir.isDirectory()) {
             throw new IOException("not a directory: " + maildir);
         }
+
         if (!maildir.canWrite()) {
             throw new IOException("not writeable: " + maildir);
         }
@@ -91,6 +94,11 @@ public class MaildirDeliveryAgent implements DeliveryAgent {
             throw new IOException("can't move tmp file to new directory: " + tmpFile);
         }
 
+        // Update maildir size
+        if (maildirSize) {
+            FileUtils.write(new File(maildir, "maildirsize"), written + " " + 1 + "\n", StandardCharsets.ISO_8859_1, true);
+        }
+
         delivery.setStatus("maildir=>" + tmpFile.getName());
         //delivery.setStatus("pass-reject-5302 buzz off!");
         delivery.setCompleted();
@@ -108,6 +116,11 @@ public class MaildirDeliveryAgent implements DeliveryAgent {
     }
 
     @Inject
+    public void setMaildirSize(@Named("maildirSize") boolean maildirSize) {
+        this.maildirSize = maildirSize;
+    }
+
+    @Inject
     public void setKeepHeaderIntact(@Named("originalHeaders") boolean keepHeaderIntact) {
         this.keepHeaderIntact = keepHeaderIntact;
     }
@@ -122,6 +135,7 @@ public class MaildirDeliveryAgent implements DeliveryAgent {
     private int outputBufferSize = 4 * 1024;
     private boolean keepHeaderIntact = true;
     private boolean autoCreate;
+    private boolean maildirSize;
     private Random random = new Random();
     private int sequence;
     private String hostName;

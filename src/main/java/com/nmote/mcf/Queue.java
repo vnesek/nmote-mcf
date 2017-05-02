@@ -23,16 +23,16 @@ public class Queue {
 
     public Queue(File queueDir, MimeConfig mimeConfig) {
         if (!queueDir.exists()) {
-            throw new IllegalArgumentException("queue directory  " + queueDir.getAbsolutePath() + " doesn't exists");
+            throw new IllegalArgumentException("queue directory " + queueDir.getAbsolutePath() + " doesn't exists");
         }
         if (!queueDir.isDirectory()) {
-            throw new IllegalArgumentException("queue directory  " + queueDir.getAbsolutePath() + " is not a directory");
+            throw new IllegalArgumentException("queue directory " + queueDir.getAbsolutePath() + " is not a directory");
         }
         if (!queueDir.canWrite()) {
-            throw new IllegalArgumentException("queue directory  " + queueDir.getAbsolutePath() + " is not writtable");
+            throw new IllegalArgumentException("queue directory " + queueDir.getAbsolutePath() + " is not writtable");
         }
         if (!queueDir.canRead()) {
-            throw new IllegalArgumentException("queue directory  " + queueDir.getAbsolutePath() + " is not readable");
+            throw new IllegalArgumentException("queue directory " + queueDir.getAbsolutePath() + " is not readable");
         }
         this.queueDir = queueDir;
         this.random = new Random();
