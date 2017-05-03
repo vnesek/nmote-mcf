@@ -15,14 +15,27 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 
 public class SmtpDeliveryAgent implements DeliveryAgent {
 
     public void deliver(QueueMessage msg, Delivery delivery) throws IOException {
+        String destination = delivery.getDestination();
+        if (destination.startsWith("remote:")) {
+            String domain = StringUtils.substringAfterLast(destination, "@");
+            destination = smtpRoutes.apply(domain);
+            if (!destination.startsWith("smtp:")) {
+                log.info("Routed {} => {}, can't deliver", domain, destination);
+                delivery.setStatus("cant-deliver (" + destination + ")");
+                delivery.setCompleted();
+                return;
+            }
+        }
+
         String host;
         int port;
         { // Parse host and port
-            String[] a = StringUtils.split(delivery.getDestination(), ':');
+            String[] a = StringUtils.split(destination, ':');
             host = a[1];
             port = a.length > 2 ? Integer.parseInt(a[2]) : 25;
         }
@@ -34,23 +47,17 @@ public class SmtpDeliveryAgent implements DeliveryAgent {
 
         try {
             // Send envelop from
-            if (log.isDebugEnabled()) {
-                log.debug("from {}", msg.getFrom());
-            }
+            log.debug("from {}", msg.getFrom());
             smartClient.from(msg.getFrom());
 
             // Send envelope recipients
             for (String to : delivery.getRecipients()) {
-                if (log.isDebugEnabled()) {
-                    log.debug("to {}", to);
-                }
+                log.debug("to {}", to);
                 smartClient.to(to);
             }
 
             // Start data
-            if (log.isDebugEnabled()) {
-                log.debug("data start");
-            }
+            log.debug("data start");
             smartClient.dataStart();
 
             // Copy data
@@ -68,7 +75,7 @@ public class SmtpDeliveryAgent implements DeliveryAgent {
                 Response dataEnd = smartClient.dataEnd();
                 delivery.setStatus("pass=>" + delivery.getDestination() + " (" + dataEnd.getMessage() + ')');
                 delivery.setCompleted();
-                log.info("Forwarded {}, written {} bytes, {}", msg.getId(), written, dataEnd);
+                log.info("Delivered {}, written {} bytes, {}", msg.getId(), written, dataEnd);
             } finally {
                 IOUtils.closeQuietly(in);
 
@@ -115,6 +122,10 @@ public class SmtpDeliveryAgent implements DeliveryAgent {
     }
 
     @Inject
+    @SmtpRoutes
+    private Function<String, String> smtpRoutes;
+
+    @Inject
     @Named("clientBufferSize")
     private int bufferSize = 1024;
 
@@ -130,4 +141,6 @@ public class SmtpDeliveryAgent implements DeliveryAgent {
     private Counters counters;
 
     private Set<Integer> smtpRejectCodes;
+
+    private final Logger log = LoggerFactory.getLogger(SmtpDeliveryAgent.class);
 }

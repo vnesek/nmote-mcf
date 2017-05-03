@@ -157,13 +157,15 @@ public class McfMessageHandler implements MessageHandler {
             this.msg.getRecipients().add(recipient);
         } catch (OverQuotaException e) {
             log.error("Rcpt over quota {}", recipient);
-            throw new RejectException(452, "recipent over quota");
+            throw new RejectException(452, "recipient over quota");
         } catch (NonLocalUserException e) {
             log.error("Rcpt not local {}", recipient);
             throw new RejectException(551, "user not local");
         } catch (TooManyForwardsException e) {
             log.error("Rcpt has too many local forwards {}", recipient);
             throw new RejectException(553, "too many forwards");
+        } catch (com.nmote.mcf.RejectException e) {
+            throw new RejectException(451, "rejected");
         } catch (Exception e) {
             log.error("Problem with recipient " + recipient, e);
             throw new RejectException(552, "transaction failed: " + e.getMessage());

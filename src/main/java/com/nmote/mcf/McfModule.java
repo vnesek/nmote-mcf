@@ -1,6 +1,7 @@
 package com.nmote.mcf;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.nmote.counters.Counters;
 import com.nmote.counters.DefaultCounters;
@@ -11,6 +12,7 @@ import org.subethamail.smtp.server.SMTPServer;
 
 import javax.inject.Singleton;
 import java.util.Properties;
+import java.util.function.Function;
 
 public class McfModule extends AbstractModule {
 
@@ -35,6 +37,7 @@ public class McfModule extends AbstractModule {
         bind(DiscardDeliveryAgent.class).in(Singleton.class);
         bind(DeliveryAgent.class).to(DefaultDeliveryAgent.class).in(Singleton.class);
         bind(Redelivery.class).in(Singleton.class);
+        bind(new TypeLiteral<Function<String, String>>() {}).annotatedWith(SmtpRoutes.class).to(StaticSmtpRoutes.class).in(Singleton.class);
 
         // Setup mime config
         MimeConfig mc = new MimeConfig.Builder()

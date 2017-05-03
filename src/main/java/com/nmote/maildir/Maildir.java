@@ -74,10 +74,7 @@ public class Maildir {
         return new Folder(this, null, dir);
     }
 
-    public void recalculateMaildirSize() throws IOException {
-        // Read maildirsize first
-        maildirSize();
-
+    void recalculateMaildirSize() throws IOException {
         File[] files = dir.listFiles();
         long size = 0;
         int messageCount = 0;
@@ -157,11 +154,18 @@ public class Maildir {
         return new File(getDir(), name);
     }
 
+    public boolean maildirSizeExists() {
+        return new File(dir, "maildirsize").exists();
+    }
+
     private void maildirSize() {
         if (quota == null) {
             try {
                 File maildirSize = new File(dir, "maildirsize");
-                if (!maildirSize.exists() || maildirSize.length() >= 5120) {
+                if (!maildirSize.exists()) {
+                    quota = new Quota();
+                    quota.setMaxMessageCount(Integer.MAX_VALUE);
+                    quota.setMaxSize(Long.MAX_VALUE);
                     recalculateMaildirSize();
                     return;
                 }
@@ -201,6 +205,12 @@ public class Maildir {
                         quota.setMessageCount(messageCount);
                     }
                 }
+
+                if (maildirSize.length() >= 5120) {
+                    String mds = quota.getMaxSize() + "S," + quota.getMaxMessageCount() + "C\n";
+                    FileUtils.write(maildirSize, mds, StandardCharsets.ISO_8859_1);
+                }
+
             } catch (IOException ignored) {
                 ignored.printStackTrace();
             }

@@ -96,7 +96,10 @@ public class MaildirDeliveryAgent implements DeliveryAgent {
 
         // Update maildir size
         if (maildirSize) {
-            FileUtils.write(new File(maildir, "maildirsize"), written + " " + 1 + "\n", StandardCharsets.ISO_8859_1, true);
+            File mds = new File(maildir, "maildirsize");
+            if (mds.exists() && mds.canWrite()) {
+                FileUtils.write(mds, written + " " + 1 + "\n", StandardCharsets.ISO_8859_1, true);
+            }
         }
 
         delivery.setStatus("maildir=>" + tmpFile.getName());

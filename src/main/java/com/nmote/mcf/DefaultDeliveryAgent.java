@@ -43,16 +43,29 @@ public class DefaultDeliveryAgent implements DeliveryAgent {
 
     protected DeliveryAgent deliveryAgentFor(String dest) {
         DeliveryAgent agent;
-        if (dest.startsWith("smtp:")) {
-            agent = smtp;
-        } else if (dest.startsWith("mbox:")) {
-            agent = mbox;
-        } else if (dest.startsWith("maildir:")) {
-            agent = maildir;
-        } else if (dest.startsWith("discard")) {
-            agent = discard;
-        } else {
-            agent = null;
+        String protocol = StringUtils.substringBefore(dest, ":");
+        switch (protocol) {
+            case "smtp":
+            case "remote":
+                agent = smtp;
+                break;
+
+            case "mbox":
+                agent = mbox;
+                break;
+
+            case "maildir":
+                agent = maildir;
+                break;
+
+            case "discard":
+            case "trash":
+                agent = discard;
+                break;
+
+            default:
+                agent = null;
+                break;
         }
         return agent;
     }

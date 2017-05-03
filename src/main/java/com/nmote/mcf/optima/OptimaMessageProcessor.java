@@ -1,12 +1,13 @@
 package com.nmote.mcf.optima;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.nmote.counters.Counters;
 import com.nmote.maildir.Maildir;
-import com.nmote.mcf.DefaultMessageProcessor;
-import com.nmote.mcf.DeliveryMessageProcessor;
-import com.nmote.mcf.QueueMessage;
-import com.nmote.mcf.RejectException;
-import com.nmote.xr.XR;
+import com.nmote.maildir.Quota;
+import com.nmote.mcf.*;
+import com.nmote.xr.EndpointBuilder;
 import com.nmote.xr.XRMethod;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -15,35 +16,25 @@ import org.slf4j.MDC;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
 public class OptimaMessageProcessor extends DefaultMessageProcessor {
-
-    interface Omp {
-
-        /**
-         * Resolves email to list of delivery destinations
-         *
-         * @param email recepient address
-         * @return list of delivery destinations
-         */
-        @XRMethod("omp.deliverEmail")
-        ArrayList<String> deliverEmail(String email);
-    }
 
     @Inject
     public OptimaMessageProcessor(
             @Named("ompAddress") String ompAddress,
             Counters counters,
             DeliveryMessageProcessor delivery,
-            @Named("pathRename") String pathRename
+            @Named("pathRename") String pathRename,
+            @Named("ompResolveCache") String resolveCache
     ) throws URISyntaxException {
-        this.omp = XR.proxy(new URI(ompAddress), Omp.class);
+        this.omp = new CachedOmp(EndpointBuilder.client(ompAddress, Omp.class).get(), resolveCache);
         this.counters = Objects.requireNonNull(counters);
         this.delivery = Objects.requireNonNull(delivery);
         this.pathRename = new PathRename(pathRename);
@@ -55,16 +46,31 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
 
     @Override
     public void checkRecipient(String recipient) throws RejectException {
+        List<String> delivery;
         try {
-            List<String> delivery = omp.deliverEmail(recipient);
-            if (delivery.isEmpty()) {
-                log.debug("Rejected {}", recipient);
-                throw new RejectException();
-            } else {
-                log.debug("Accepted {} => {}", recipient, delivery);
-            }
+            delivery = omp.deliverEmail(recipient);
         } catch (Throwable t) {
+            log.error("Failed to check recipient", t);
             throw new RejectException();
+        }
+        if (delivery.isEmpty()) {
+            log.debug("Rejected {}", recipient);
+            throw new RejectException();
+        } else {
+            // Check quota for maildirs
+            for (String d : delivery) {
+                if (d.startsWith("maildir:")) {
+                    Maildir m = new Maildir(new File(pathRename.rename(d.substring(8))));
+                    if (m.maildirSizeExists()) {
+                        Quota quota = m.getQuota();
+                        if (quota.isOverQuota()) {
+                            log.info("Over quota {} => {}, {}", recipient, m, quota);
+                            throw new OverQuotaException();
+                        }
+                    }
+                }
+            }
+            log.debug("Accepted {} => {}", recipient, delivery);
         }
     }
 
@@ -87,7 +93,19 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
                 // Resolve email address
                 List<String> destinations = omp.deliverEmail(recipient);
                 for (final String d : destinations) {
-                    message.deliverTo(recipient, pathRename.rename(d));
+                    switch (StringUtils.substringBefore(d, ":")) {
+                        case "remote":
+                            message.deliverTo(StringUtils.substringAfter(d, ":"), d);
+                            break;
+                        case "maildir":
+                            message.deliverTo(recipient, pathRename.rename(d));
+                            break;
+                        case "bounce":
+                        case "pipe":
+                        default:
+                            log.info("Unsupported {}", d);
+                    }
+
                 }
                 log.debug("Routed to {}", destinations);
             } finally {
@@ -99,10 +117,50 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
         }
     }
 
+    interface Omp {
+
+        /**
+         * Resolves email to list of delivery destinations
+         *
+         * @param email recepient address
+         * @return list of delivery destinations
+         */
+        @XRMethod("omp.deliverEmail")
+        ArrayList<String> deliverEmail(String email);
+    }
+
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final Omp omp;
     private final PathRename pathRename;
     private Counters counters;
     private DeliveryMessageProcessor delivery;
 
+    private static class CachedOmp extends CacheLoader<String, ArrayList<String>> implements Omp {
+
+        CachedOmp(Omp delegate, String cacheSpec) {
+            this.cache = CacheBuilder.from(cacheSpec).build(this);
+            this.delegate = Objects.requireNonNull(delegate);
+            this.bounce = new ArrayList<>();
+            this.bounce.add("bounce:route-failed");
+        }
+
+        @Override
+        public ArrayList<String> deliverEmail(String email) {
+            try {
+                return cache.get(email);
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+                return bounce;
+            }
+        }
+
+        @Override
+        public ArrayList<String> load(String email) throws Exception {
+            return delegate.deliverEmail(email);
+        }
+
+        private final ArrayList<String> bounce;
+        private final LoadingCache<String, ArrayList<String>> cache;
+        private final Omp delegate;
+    }
 }
