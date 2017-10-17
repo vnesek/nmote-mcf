@@ -65,8 +65,8 @@ public class Maildir {
         return dir;
     }
 
-    public Quota getQuota() {
-        maildirSize();
+    public Quota getQuota(int maxMessageCount, long maxSize) {
+        maildirSize(maxMessageCount, maxSize);
         return quota;
     }
 
@@ -158,14 +158,14 @@ public class Maildir {
         return new File(dir, "maildirsize").exists();
     }
 
-    private void maildirSize() {
+    private void maildirSize(int maxMessageCount, long maxSize) {
         if (quota == null) {
             try {
                 File maildirSize = new File(dir, "maildirsize");
                 if (!maildirSize.exists()) {
                     quota = new Quota();
-                    quota.setMaxMessageCount(Integer.MAX_VALUE);
-                    quota.setMaxSize(Long.MAX_VALUE);
+                    quota.setMaxMessageCount(maxMessageCount);
+                    quota.setMaxSize(maxSize);
                     recalculateMaildirSize();
                     return;
                 }

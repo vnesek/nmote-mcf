@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
@@ -61,8 +62,8 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
             for (String d : delivery) {
                 if (d.startsWith("maildir:")) {
                     Maildir m = new Maildir(new File(pathRename.rename(d.substring(8))));
-                    if (m.maildirSizeExists()) {
-                        Quota quota = m.getQuota();
+                    if (!m.maildirSizeExists()) {
+                        Quota quota = m.getQuota(Integer.MAX_VALUE, Long.MAX_VALUE);
                         if (quota.isOverQuota()) {
                             log.info("Over quota {} => {}, {}", recipient, m, quota);
                             throw new OverQuotaException();
@@ -96,16 +97,18 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
                     switch (StringUtils.substringBefore(d, ":")) {
                         case "remote":
                             message.deliverTo(StringUtils.substringAfter(d, ":"), d);
+                            // message.deliverTo(recipient, "bounce:test");
                             break;
                         case "maildir":
                             message.deliverTo(recipient, pathRename.rename(d));
                             break;
                         case "bounce":
+                            message.deliverTo(recipient, d);
+                            break;
                         case "pipe":
                         default:
                             log.info("Unsupported {}", d);
                     }
-
                 }
                 log.debug("Routed to {}", destinations);
             } finally {
@@ -127,6 +130,9 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
          */
         @XRMethod("omp.deliverEmail")
         ArrayList<String> deliverEmail(String email);
+
+        @XRMethod("omp.getEffectiveSettings")
+        HashMap<String, String> getEffectiveSettings(String email);
     }
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -149,7 +155,6 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
             try {
                 return cache.get(email);
             } catch (ExecutionException e) {
-                e.printStackTrace();
                 return bounce;
             }
         }
@@ -157,6 +162,11 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
         @Override
         public ArrayList<String> load(String email) throws Exception {
             return delegate.deliverEmail(email);
+        }
+
+        @Override
+        public HashMap<String, String> getEffectiveSettings(String email) {
+            return delegate.getEffectiveSettings(email);
         }
 
         private final ArrayList<String> bounce;

@@ -35,6 +35,7 @@ public class McfModule extends AbstractModule {
         bind(MBoxDeliveryAgent.class).in(Singleton.class);
         bind(MaildirDeliveryAgent.class).in(Singleton.class);
         bind(DiscardDeliveryAgent.class).in(Singleton.class);
+        bind(BounceDeliveryAgent.class).in(Singleton.class);
         bind(DeliveryAgent.class).to(DefaultDeliveryAgent.class).in(Singleton.class);
         bind(Redelivery.class).in(Singleton.class);
         bind(new TypeLiteral<Function<String, String>>() {}).annotatedWith(SmtpRoutes.class).to(StaticSmtpRoutes.class).in(Singleton.class);

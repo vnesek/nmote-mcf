@@ -35,7 +35,7 @@ public class McfMessageHandler implements MessageHandler {
                 log.debug("Data {}", msg);
             }
 
-            // First chech message for viruses
+            // First check message for viruses
             processor.check(this.msg);
 
             // Now route it

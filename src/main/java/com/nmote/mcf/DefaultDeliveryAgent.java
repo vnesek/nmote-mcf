@@ -63,6 +63,10 @@ public class DefaultDeliveryAgent implements DeliveryAgent {
                 agent = discard;
                 break;
 
+            case "bounce":
+                agent = bounce;
+                break;
+
             default:
                 agent = null;
                 break;
@@ -81,6 +85,9 @@ public class DefaultDeliveryAgent implements DeliveryAgent {
 
     @Inject(optional = true)
     protected SmtpDeliveryAgent smtp;
+
+    @Inject(optional = true)
+    protected BounceDeliveryAgent bounce;
 
     private Map<String, String> aliases;
 }

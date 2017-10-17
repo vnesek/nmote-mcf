@@ -1,6 +1,7 @@
 package com.nmote.mcf;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.nmote.io.DeferredFileOutputStream;
 import com.nmote.mcf.Header.HeaderField;
 import org.apache.commons.io.FileUtils;
@@ -24,7 +25,7 @@ import java.util.Set;
 
 public class QueueMessage {
 
-    private static ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
 
     QueueMessage(File file) throws IOException {
         this(file, null);
@@ -44,7 +45,7 @@ public class QueueMessage {
         File f = new File("/tmp/fff");
         f.delete();
         QueueMessage message = new QueueMessage(f);
-        message.create(new FileInputStream("samples/queue2/msg4"));
+        message.create(new FileInputStream("samples/message/message-1.msg"));
         System.out.println(message.getHeader());
     }
 
