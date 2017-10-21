@@ -7,6 +7,7 @@ import com.nmote.mcf.Header.HeaderField;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.parser.AbstractContentHandler;
 import org.apache.james.mime4j.parser.MimeStreamParser;
@@ -19,6 +20,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.memory.MemoryIndex;
 
 import java.io.*;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +28,14 @@ import java.util.Set;
 public class QueueMessage {
 
     private static final ObjectMapper MAPPER = new ObjectMapper().configure(SerializationFeature.INDENT_OUTPUT, true);
+    private final File file;
+    private final String id;
+    private transient MimeConfig mimeConfig;
+    private boolean deleted;
+    private transient DeferredFileOutputStream out;
+    private int size = -1;
+    private Meta meta;
+    private transient MemoryIndex index;
 
     QueueMessage(File file) throws IOException {
         this(file, null);
@@ -115,6 +125,12 @@ public class QueueMessage {
             in.close();
         }
         loadIndex(getInputStream());
+
+        // Add Date header
+        Header header = meta.getHeader();
+        if (header.get("Date") == null) {
+            header.add("Date", DateFormatUtils.SMTP_DATETIME_FORMAT.format(new Date()));
+        }
     }
 
     public void delete() throws IOException {
@@ -277,6 +293,9 @@ public class QueueMessage {
         parser.setContentDecoding(true);
         parser.setContentHandler(new AbstractContentHandler() {
 
+            private int depth;
+            private int content;
+
             @Override
             public void body(BodyDescriptor bd, InputStream is) throws MimeException, IOException {
                 String charset = bd.getCharset();
@@ -315,9 +334,6 @@ public class QueueMessage {
             @Override
             public void startMessage() throws MimeException {
             }
-
-            private int depth;
-            private int content;
         });
         try {
             parser.parse(in);
@@ -348,18 +364,8 @@ public class QueueMessage {
             out.writeToFile();
         }
     }
-
     public interface Flags {
         String SPAM = "spam";
         String VIRUS = "virus";
     }
-
-    private final File file;
-    private final String id;
-    private transient MimeConfig mimeConfig;
-    private boolean deleted;
-    private transient DeferredFileOutputStream out;
-    private int size = -1;
-    private Meta meta;
-    private transient MemoryIndex index;
 }
