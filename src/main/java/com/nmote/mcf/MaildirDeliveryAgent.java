@@ -14,6 +14,17 @@ import java.util.Random;
 
 public class MaildirDeliveryAgent implements DeliveryAgent {
 
+    @Inject
+    private Counters counters;
+    private int outputBufferSize = 4 * 1024;
+    private boolean keepHeaderIntact = true;
+    private boolean autoCreate;
+    private boolean maildirSize;
+    private Random random = new Random();
+    private int sequence;
+    private String hostName;
+    private String fileNameFormat = "%2$d.%5$s.%3$s.%4$s%6$03X";
+
     @Override
     public void deliver(QueueMessage msg, Delivery delivery) throws IOException {
         final File maildir = new File(delivery.getDestination().substring(8));
@@ -51,8 +62,19 @@ public class MaildirDeliveryAgent implements DeliveryAgent {
             synchronized (this) {
                 seq = ++sequence;
             }
-            String unique = Long.toHexString(System.currentTimeMillis()) + '.' + hostName + '.' + seq + '.'
-                    + msg.getId() + '.' + Integer.toHexString(random.nextInt(0xFFF));
+            // Old message id format
+            // String unique = Long.toHexString(System.currentTimeMillis()) + '.' + hostName + '.' + seq + '.'
+            //        + msg.getId() + '.' + Integer.toHexString(random.nextInt(0xFFF));
+            long now = System.currentTimeMillis();
+            String unique = String.format(fileNameFormat,
+                    now, // 1
+                    now / 1000, // 2
+                    hostName, // 3
+                    seq, // 4
+                    msg.getId(), // 5
+                    random.nextInt(0xFFF) // 6
+            );
+
             tmpFile = new File(tmp, unique);
             if (tmpFile.createNewFile()) {
                 break;
@@ -128,18 +150,12 @@ public class MaildirDeliveryAgent implements DeliveryAgent {
         this.keepHeaderIntact = keepHeaderIntact;
     }
 
+    @Inject
+    public void setFileNameFormat(@Named("fileNameFormat") String fileNameFormat) {
+        this.fileNameFormat = fileNameFormat;
+    }
+
     public void setOutputBufferSize(int outputBufferSize) {
         this.outputBufferSize = outputBufferSize;
     }
-
-    @Inject
-    private Counters counters;
-
-    private int outputBufferSize = 4 * 1024;
-    private boolean keepHeaderIntact = true;
-    private boolean autoCreate;
-    private boolean maildirSize;
-    private Random random = new Random();
-    private int sequence;
-    private String hostName;
 }
