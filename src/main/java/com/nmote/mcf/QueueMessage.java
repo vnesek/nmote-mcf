@@ -9,6 +9,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.james.mime4j.MimeException;
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.codec.DecoderUtil;
 import org.apache.james.mime4j.parser.AbstractContentHandler;
 import org.apache.james.mime4j.parser.MimeStreamParser;
 import org.apache.james.mime4j.stream.BodyDescriptor;
@@ -301,8 +303,7 @@ public class QueueMessage {
                 String charset = bd.getCharset();
                 if (charset != null) {
                     String fieldName = "text-" + (++content);
-                    TokenStream stream = analyzer.tokenStream(fieldName, new BufferedReader(
-                            new InputStreamReader(is)));
+                    TokenStream stream = analyzer.tokenStream(fieldName, new BufferedReader(new InputStreamReader(is)));
                     index.addField(fieldName, stream);
                 }
             }
@@ -316,10 +317,8 @@ public class QueueMessage {
             public void field(Field field) throws MimeException {
                 String name = field.getName();
                 String value = field.getBody();
-                /*
-                 * DecoderUtil.decodeEncodedWords(field.getBody(),
-				 * DecodeMonitor.SILENT);
-				 */
+                // String value = DecoderUtil.decodeEncodedWords(field.getBody(), DecodeMonitor.SILENT);
+
                 if (depth == 0) {
                     headers.add(name, value);
                 }
@@ -348,7 +347,8 @@ public class QueueMessage {
             for (HeaderField f : e.getValue()) {
                 b.append(f.getValue()).append(' ');
             }
-            index.addField(e.getKey(), b.toString(), analyzer);
+            String words = DecoderUtil.decodeEncodedWords(b.toString(), DecodeMonitor.SILENT);
+            index.addField(e.getKey(), words, analyzer);
         }
 
         meta.setHeader(headers);
@@ -364,6 +364,7 @@ public class QueueMessage {
             out.writeToFile();
         }
     }
+
     public interface Flags {
         String SPAM = "spam";
         String VIRUS = "virus";

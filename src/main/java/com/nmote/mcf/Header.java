@@ -148,11 +148,11 @@ public class Header implements Serializable {
             for (HeaderField hf : hfs) {
                 w.append(hf.getName());
                 w.append(": ");
-                if (hf.getName().equalsIgnoreCase("subject")) {
-                    w.append(EncoderUtil.encodeIfNecessary(hf.getValue(), Usage.TEXT_TOKEN, hf.getName().length() + 2));
-                } else {
+                //if (hf.getName().equalsIgnoreCase("subject")) {
+                //    w.append(EncoderUtil.encodeIfNecessary(hf.getValue(), Usage.TEXT_TOKEN, hf.getName().length() + 2));
+                //} else {
                     w.append(hf.getValue());
-                }
+                //}
                 w.append('\n');
             }
         }

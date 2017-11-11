@@ -1,11 +1,15 @@
 package com.nmote.mcf;
 
+import org.apache.james.mime4j.codec.DecodeMonitor;
+import org.apache.james.mime4j.codec.DecoderUtil;
+import org.apache.james.mime4j.codec.EncoderUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
 
@@ -26,8 +30,11 @@ public class DeliveryMessageProcessor extends DefaultMessageProcessor {
                     String subject = message.getHeader().get("subject");
                     if (subject == null) {
                         subject = "(No subject)";
+                    } else {
+                        subject = DecoderUtil.decodeEncodedWords(subject, DecodeMonitor.SILENT, StandardCharsets.UTF_8);
                     }
                     subject = spamPrefix + subject;
+                    subject = EncoderUtil.encodeIfNecessary(subject, EncoderUtil.Usage.TEXT_TOKEN, 0);
                     message.getHeader().set("subject", subject);
                     log.info("Marked spam message");
                 } else {
