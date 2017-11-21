@@ -93,7 +93,7 @@ public class MaildirDeliveryAgent implements DeliveryAgent {
         }
 
         // Copy message to 'tmp'
-        OutputStream out = new CRLFOutputStream(new BufferedOutputStream(new FileOutputStream(tmpFile),
+        OutputStream out = new CRLFFilterOutputStream(new BufferedOutputStream(new FileOutputStream(tmpFile),
                 outputBufferSize));
         long written = msg.writeTo(out, keepHeaderIntact);
         log.info("Saved to tmp {}, written {} bytes", msg.getId(), written);
