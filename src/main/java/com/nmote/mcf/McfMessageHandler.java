@@ -12,6 +12,8 @@ import org.subethamail.smtp.server.Session;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class McfMessageHandler implements MessageHandler {
 
@@ -55,6 +57,9 @@ public class McfMessageHandler implements MessageHandler {
             if (ctx instanceof Session) {
                 Session session = (Session) ctx;
                 session.setDataResponse("id=" + this.msg.getId());
+
+                boolean wasAnyDeliveryOk = false;
+                Collection<RejectException> errors = new ArrayList<>();
                 for (Delivery d : this.msg.getDeliveries()) {
                     if (d.isCompleted()) {
                         String status = d.getStatus();
@@ -71,18 +76,23 @@ public class McfMessageHandler implements MessageHandler {
                                 // Extract SMTP reject code
                                 log.debug("Message rejected: {}", status);
                                 code = Integer.parseInt(status.substring(12, status.indexOf(' ', 13)));
+
+                                // Substitute 4xx for 5xx
+                                if (code / 100 == 4) {
+                                    code += 100;
+                                }
+                                errors.add(new RejectException(code, status));
                             } catch (Throwable t) {
                                 log.error("Internal error while handling pass-reject status code", t);
-                                throw new RejectException("message rejected, internal error");
+                                errors.add(new RejectException("message rejected, internal error"));
                             }
-
-                            // Substitute 4xx for 5xx
-                            if (code / 100 == 4) {
-                                code += 100;
-                            }
-                            throw new RejectException(code, status);
+                        } else {
+                            wasAnyDeliveryOk = true;
                         }
                     }
+                }
+                if (!wasAnyDeliveryOk && !errors.isEmpty()) {
+                    throw errors.iterator().next();
                 }
             }
 
