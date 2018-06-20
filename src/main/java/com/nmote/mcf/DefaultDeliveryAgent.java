@@ -67,6 +67,10 @@ public class DefaultDeliveryAgent implements DeliveryAgent {
                 agent = bounce;
                 break;
 
+            case "out-of-office":
+                agent = outOfOffice;
+                break;
+
             default:
                 agent = null;
                 break;
@@ -88,6 +92,9 @@ public class DefaultDeliveryAgent implements DeliveryAgent {
 
     @Inject(optional = true)
     protected BounceDeliveryAgent bounce;
+
+    @Inject(optional = true)
+    protected OutOfOfficeDeliveryAgent outOfOffice;
 
     private Map<String, String> aliases;
 }

@@ -102,6 +102,7 @@ public class OptimaMessageProcessor extends DefaultMessageProcessor {
                         case "maildir":
                             message.deliverTo(recipient, pathRename.rename(d));
                             break;
+                        case "out-of-office":
                         case "bounce":
                             message.deliverTo(recipient, d);
                             break;
